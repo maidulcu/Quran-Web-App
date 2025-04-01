@@ -6,8 +6,8 @@ import AyahItem from '../components/AyahItem';
 
 const SurahDetail = () => {
   const { id } = useParams();
-  const { translationEdition, audioEdition } = useContext(SettingsContext);
-  const { loadAndPlay, setQueue, isPlaying } = useAudioPlayer();
+  const { translation, audioEdition } = useContext(SettingsContext);
+const { loadAndPlay, setQueue, isPlaying, currentAyah, togglePlayPause } = useAudioPlayer();
   const [surah, setSurah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(null);
@@ -18,7 +18,7 @@ const SurahDetail = () => {
       try {
         const [arabicRes, translationRes] = await Promise.all([
           fetch(`https://api.alquran.cloud/v1/surah/${id}/ar.alafasy`).then(res => res.json()),
-          fetch(`https://api.alquran.cloud/v1/surah/${id}/${translationEdition}`).then(res => res.json())
+          fetch(`https://api.alquran.cloud/v1/surah/${id}/${translation}`).then(res => res.json())
         ]);
 
         const arabicAyahs = arabicRes.data.ayahs;
@@ -48,7 +48,7 @@ const SurahDetail = () => {
     };
 
     fetchSurahData();
-  }, [id, translationEdition]);
+  }, [id, translation]);
 
   const toggleBookmark = (ayah) => {
     let updated;
@@ -70,7 +70,7 @@ const SurahDetail = () => {
     };
     const audioUrl = `https://cdn.islamic.network/quran/audio/128/${audioEdition}/${ayah.number}.mp3`;
 
-    if (index !== null) {
+    if (index !== null && (!currentAyah || currentAyah.number !== ayah.number)) {
       const queue = surah.ayahs.slice(index).map((a) => ({
         number: a.number,
         text: a.text,
@@ -99,13 +99,13 @@ const SurahDetail = () => {
 
   const isBookmarked = (number) => bookmarks.some(b => b.number === number);
 
-  useEffect(() => {
-    if (!isPlaying && currentIndex !== null && surah?.ayahs?.length > 0 && currentIndex < surah.ayahs.length - 1) {
-      const nextIndex = currentIndex + 1;
-      const nextAyah = surah.ayahs[nextIndex];
-      playAudio(nextAyah, nextIndex);
-    }
-  }, [isPlaying]);
+  // useEffect(() => {
+  //   if (!isPlaying && currentIndex !== null && surah?.ayahs?.length > 0 && currentIndex < surah.ayahs.length - 1) {
+  //     const nextIndex = currentIndex + 1;
+  //     const nextAyah = surah.ayahs[nextIndex];
+  //     playAudio(nextAyah, nextIndex);
+  //   }
+  // }, [isPlaying]);
 
   if (loading || !surah) return <div className="text-center py-6">Loading surah...</div>;
 
@@ -115,10 +115,16 @@ const SurahDetail = () => {
 
       <div className="text-center mb-6 space-x-4">
         <button
-          onClick={() => playAudio(surah.ayahs[0], 0)}
+          onClick={() => {
+            if (isPlaying) {
+              togglePlayPause();
+            } else {
+              playAudio(surah.ayahs[0], 0);
+            }
+          }}
           className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
         >
-          ▶ Play All
+          {isPlaying ? '⏸ Pause' : '▶ Play All'}
         </button>
         <button
           onClick={resumeLast}

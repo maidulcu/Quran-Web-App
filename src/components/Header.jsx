@@ -21,7 +21,6 @@ export default function Header() {
         <NavLink to="/surahs" className={navLinkClass}>Surahs</NavLink>
         <NavLink to="/search" className={navLinkClass}>Search</NavLink>
         <NavLink to="/bookmarks" className={navLinkClass}>Bookmarks</NavLink>
-        <NavLink to="/settings" className={navLinkClass}>Settings</NavLink>
         <button onClick={toggleTheme} className="ml-2 text-xl">
           {theme === 'dark' ? '🌙' : '☀️'}
         </button>
