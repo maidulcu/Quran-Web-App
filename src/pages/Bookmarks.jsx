@@ -24,20 +24,23 @@ export default function Bookmarks() {
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4 text-center">⭐ Your Bookmarked Ayahs</h2>
+    <div className="p-4 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-white">⭐ Your Bookmarked Ayahs</h2>
       <div className="space-y-4">
         {bookmarkedAyahs.map((ayah) => (
           <div key={ayah.number} className="relative">
-            <AyahItem ayah={{
-              ...ayah,
-              translation: ayah.translation || `(${translation}) translation unavailable`
-            }} />
+            <AyahItem
+              ayah={{
+                ...ayah,
+                translation: ayah.translation || `(${translation}) translation unavailable`
+              }}
+            />
             <button
               onClick={() => removeBookmark(ayah.number)}
-              className="absolute top-2 right-2 text-red-500 text-sm"
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700 dark:hover:text-red-400 bg-white dark:bg-gray-900 rounded-full p-1 shadow"
+              title="Remove Bookmark"
             >
-              Remove
+              ❌
             </button>
           </div>
         ))}

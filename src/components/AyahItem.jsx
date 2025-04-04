@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 
-export default function AyahItem({ ayah, bookmarked, toggleBookmark, playAudio }) {
+export default function AyahItem({ ayah, bookmarked, toggleBookmark = () => {}, playAudio }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
   const handlePlay = () => {
+    if (!playAudio || typeof playAudio !== 'function') return;
+
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -12,7 +15,7 @@ export default function AyahItem({ ayah, bookmarked, toggleBookmark, playAudio }
       setIsPlaying(false);
     }
 
-    const audio = playAudio();
+    const audio = playAudio(ayah);
     if (audio instanceof HTMLAudioElement) {
       audioRef.current = audio;
       setIsPlaying(true);
@@ -25,38 +28,41 @@ export default function AyahItem({ ayah, bookmarked, toggleBookmark, playAudio }
   };
 
   return (
-    <div className={`border-b py-6 px-2 rounded-md shadow-sm transition ${
-      isPlaying ? 'bg-yellow-100 dark:bg-yellow-800' : 'bg-white dark:bg-gray-900'
+    <div className={`relative border border-gray-200 dark:border-gray-700 py-4 px-4 rounded-md transition shadow-sm ${
+      isPlaying ? 'bg-yellow-50 dark:bg-yellow-900' : 'bg-white dark:bg-gray-900'
     }`}>
-      <div className="text-2xl text-right font-arabic text-gray-900 dark:text-white leading-relaxed">
-        {ayah.text}
+
+      <div className="flex justify-between items-start">
+        {/* Ayah reference */}
+        <Link to={`/surah/${ayah.surah?.number}`} className="text-sm text-gray-700 dark:text-gray-400 font-semibold hover:underline">
+          {ayah.surah ? `${ayah.surah.number}:${ayah.numberInSurah}` : `Ayah ${ayah.number}`}
+        </Link>
+
+        {/* Action buttons */}
+        <div className="flex items-center space-x-3">
+          <button onClick={() => {
+            toggleBookmark(ayah);
+          }} title="Bookmark">
+            <span role="img" aria-label="bookmark">{bookmarked ? '🔖' : '📑'}</span>
+          </button>
+        </div>
       </div>
-      <div className="text-sm text-left text-gray-700 dark:text-gray-300 mt-3">
-        {ayah.translationText}
-      </div>
-      <div className="mt-4 flex justify-end space-x-4 text-sm">
-        <button
-          onClick={handlePlay}
-          disabled={isPlaying}
-          className={`px-3 py-1 rounded transition ${
-            isPlaying
-              ? 'bg-blue-200 dark:bg-blue-600 text-blue-800 dark:text-white cursor-not-allowed'
-              : 'bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-white hover:bg-blue-200 dark:hover:bg-blue-700'
-          }`}
-        >
-          {isPlaying ? '🔊 Playing' : '▶ Play'}
-        </button>
-        <button
-          onClick={toggleBookmark}
-          className={`px-3 py-1 rounded transition ${
-            bookmarked
-              ? 'bg-yellow-200 dark:bg-yellow-500 text-yellow-900 dark:text-black'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-          }`}
-        >
-          {bookmarked ? '⭐ Bookmarked' : '☆ Bookmark'}
-        </button>
-      </div>
+
+      {/* Arabic + Translation Section */}
+      <Link to={`/surah/${ayah.surah?.number}`} className="block mt-6 flex flex-col md:flex-row md:justify-between md:items-start gap-6 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md p-2 transition">
+        {/* Arabic */}
+        <div className="text-base text-gray-800 dark:text-gray-100 text-left">
+          {ayah.edition?.englishName && (
+            <div className="text-sm text-teal-700 dark:text-teal-400 font-bold mb-1">{ayah.edition.englishName}</div>
+          )}
+          <div>{ayah.text}</div>
+        </div>
+        <div className="h-2" />
+        {/* Translation */}
+        <div className="text-base text-justify text-gray-800 dark:text-gray-300">
+          {ayah.translationText}
+        </div>
+      </Link>
     </div>
   );
 }

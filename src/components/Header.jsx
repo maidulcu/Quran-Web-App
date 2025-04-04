@@ -31,7 +31,9 @@ export default function Header() {
   return (
     <header className="flex items-center justify-between p-4 border-b bg-white dark:bg-gray-800">
       <div className="text-xl font-bold">
-        <NavLink to="/" className="text-gray-800 dark:text-white">Quran Web App</NavLink>
+      <NavLink to="/" className="flex items-center space-x-2 text-gray-800 dark:text-white">
+      <img src="/quran-logo.png" alt="Quran Logo" className="h-8 w-auto" />
+    </NavLink>
       </div>
       <nav className="flex items-center space-x-4">
         {isSurahPage && (
