@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import MeccanBg from '../assets/meccan-bg.png';
@@ -124,6 +124,9 @@ const SurahDetail = () => {
 
   const surahArtwork = surah.revelationType === 'Meccan' ? MeccanBg : MedinanBg;
 
+  const prevSurahId = parseInt(id) > 1 ? parseInt(id) - 1 : null;
+  const nextSurahId = parseInt(id) < 114 ? parseInt(id) + 1 : null;
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8 gap-6">
@@ -197,6 +200,19 @@ const SurahDetail = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-between mt-10 text-sm">
+        {prevSurahId ? (
+          <Link to={`/surah/${prevSurahId}`} className="text-teal-600 hover:text-teal-800">
+            ← Previous Surah
+          </Link>
+        ) : <div />}
+        {nextSurahId && (
+          <Link to={`/surah/${nextSurahId}`} className="text-teal-600 hover:text-teal-800">
+            Next Surah →
+          </Link>
+        )}
       </div>
     </div>
   );
