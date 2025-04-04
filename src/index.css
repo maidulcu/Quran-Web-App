@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Uthmanic Hafs';
+  src: url('/fonts/UthmanicHafs1 Ver09.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PDMS Saleem';
+  src: url('/fonts/PDMS_Saleem_QuranFont.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 html {
     transition: background-color 0.3s, color 0.3s;
   }

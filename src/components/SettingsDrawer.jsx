@@ -118,7 +118,7 @@ export default function SettingsDrawer({ onClose }) {
             <div className="border-t pt-4">
               <h3 className="text-sm font-semibold mb-1">Quran Font</h3>
               <div className="flex space-x-2 mb-2">
-                {['Uthmani', 'IndoPak', 'Tajweed'].map((script) => (
+              {['Uthmani', 'IndoPak'].map((script) => (
                   <button
                     key={script}
                     onClick={() => setFontScript(script)}

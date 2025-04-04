@@ -2,16 +2,18 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { SettingsContext } from '../context/SettingsContext';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
-import AyahItem from '../components/AyahItem';
+import MeccanBg from '../assets/meccan-bg.png';
+import MedinanBg from '../assets/medinan-bg.png';
 
 const SurahDetail = () => {
   const { id } = useParams();
-  const { translation, audioEdition } = useContext(SettingsContext);
-const { loadAndPlay, setQueue, isPlaying, currentAyah, togglePlayPause } = useAudioPlayer();
+  const { translation, audioEdition, fontScript } = useContext(SettingsContext);
+  const { loadAndPlay, setQueue, isPlaying, currentAyah, togglePlayPause } = useAudioPlayer();
   const [surah, setSurah] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
+  const [translatorName, setTranslatorName] = useState('');
 
   useEffect(() => {
     const fetchSurahData = async () => {
@@ -34,6 +36,9 @@ const { loadAndPlay, setQueue, isPlaying, currentAyah, togglePlayPause } = useAu
           ...arabicRes.data,
           ayahs: combinedAyahs
         });
+
+        const editionName = translationRes.data.edition.name;
+        setTranslatorName(editionName);
 
         const saved = localStorage.getItem('bookmarkedAyahs');
         if (saved) {
@@ -99,50 +104,98 @@ const { loadAndPlay, setQueue, isPlaying, currentAyah, togglePlayPause } = useAu
 
   const isBookmarked = (number) => bookmarks.some(b => b.number === number);
 
-  // useEffect(() => {
-  //   if (!isPlaying && currentIndex !== null && surah?.ayahs?.length > 0 && currentIndex < surah.ayahs.length - 1) {
-  //     const nextIndex = currentIndex + 1;
-  //     const nextAyah = surah.ayahs[nextIndex];
-  //     playAudio(nextAyah, nextIndex);
-  //   }
-  // }, [isPlaying]);
+  const shareAyah = (ayah) => {
+    const text = `Surah ${surah.englishName} (${surah.number}:${ayah.number})\n\n"${ayah.text}"\n\n— ${ayah.translationText}`;
+    const url = `${window.location.origin}/surah/${surah.number}#ayah-${ayah.number}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: `Quran ${surah.englishName} ${ayah.number}`,
+        text,
+        url,
+      }).catch(err => console.error('Share failed', err));
+    } else {
+      navigator.clipboard.writeText(`${text}\n\n${url}`);
+      alert('Link copied to clipboard.');
+    }
+  };
 
   if (loading || !surah) return <div className="text-center py-6">Loading surah...</div>;
 
-  return (
-    <div className="p-4 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4">Surah {surah.englishName}</h2>
+  const surahArtwork = surah.revelationType === 'Meccan' ? MeccanBg : MedinanBg;
 
-      <div className="text-center mb-6 space-x-4">
-        <button
-          onClick={() => {
-            if (isPlaying) {
-              togglePlayPause();
-            } else {
-              playAudio(surah.ayahs[0], 0);
-            }
-          }}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-        >
-          {isPlaying ? '⏸ Pause' : '▶ Play All'}
-        </button>
-        <button
-          onClick={resumeLast}
-          className="px-6 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-        >
-          ⏯ Resume Last
-        </button>
+  return (
+    <div className="p-4 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-8 gap-6">
+        <div className="flex-shrink-0">
+          <img
+            src={surahArtwork}
+            alt={`${surah.revelationType} artwork`}
+            className="h-20 object-contain opacity-80"
+          />
+        </div>
+        <div className="flex-1 text-center">
+          <h2 className="text-2xl font-bold">{surah.englishName}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Ayah – {surah.numberOfAyahs}, {surah.revelationType}
+          </p>
+        </div>
+        <div className="flex flex-col items-end space-y-2">
+          <button
+            onClick={() => {
+              if (isPlaying) {
+                togglePlayPause();
+              } else {
+                playAudio(surah.ayahs[0], 0);
+              }
+            }}
+            className="text-teal-600 hover:text-teal-800 text-sm inline-flex items-center"
+          >
+            {isPlaying ? '⏸ Pause' : '▶ Play Audio'}
+          </button>
+          <button
+            onClick={resumeLast}
+            className="text-yellow-600 hover:text-yellow-800 text-sm"
+          >
+            ⏯ Resume
+          </button>
+        </div>
       </div>
 
       <div className="space-y-6">
         {surah.ayahs.map((ayah, index) => (
-          <AyahItem
-            key={ayah.number}
-            ayah={ayah}
-            bookmarked={isBookmarked(ayah.number)}
-            toggleBookmark={() => toggleBookmark(ayah)}
-            playAudio={() => playAudio(ayah, index)}
-          />
+          <div key={ayah.number} id={`ayah-${ayah.number}`} className="border border-gray-200 dark:border-gray-700 rounded-lg px-6 py-5 shadow-md bg-white dark:bg-gray-900">
+            <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+              <div className="font-medium text-gray-700 dark:text-gray-300">
+                {surah.number}:{ayah.number}
+              </div>
+              <div className="flex items-center space-x-3">
+                <button onClick={() => playAudio(ayah, index)} title="Play">
+                  <span role="img" aria-label="play">▶</span>
+                </button>
+                <button onClick={() => toggleBookmark(ayah)} title="Bookmark">
+                  <span role="img" aria-label="bookmark">{isBookmarked(ayah.number) ? '🔖' : '📑'}</span>
+                </button>
+                <button onClick={() => shareAyah(ayah)} title="Share">
+                  <span role="img" aria-label="share">🔗</span>
+                </button>
+              </div>
+            </div>
+            <div
+              className={`text-right text-3xl leading-loose tracking-wide text-gray-900 dark:text-white ${
+                fontScript === 'IndoPak' ? 'font-indopak' : 'font-quran'
+              }`}
+            >
+              {ayah.text}
+            </div>
+            <div className="h-2" />
+            <div className="text-[10px] font-bold text-teal-700 dark:text-teal-400 tracking-widest uppercase mb-1">
+              {translatorName}
+            </div>
+            <div className="text-base text-justify text-gray-800 dark:text-gray-300">
+              {ayah.translationText}
+            </div>
+          </div>
         ))}
       </div>
     </div>
