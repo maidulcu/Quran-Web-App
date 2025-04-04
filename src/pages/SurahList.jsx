@@ -1,22 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function SurahList() {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const filterType = params.get('type'); // e.g. Meccan or Medinan
 
   useEffect(() => {
     fetch('https://api.alquran.cloud/v1/surah')
       .then(res => res.json())
       .then(data => {
-        setSurahs(data.data);
+        const allSurahs = data.data;
+        const filtered = filterType
+          ? allSurahs.filter(s => s.revelationType === filterType)
+          : allSurahs;
+        setSurahs(filtered);
         setLoading(false);
       })
       .catch(err => {
         console.error('Failed to fetch Surahs:', err);
         setLoading(false);
       });
-  }, []);
+  }, [filterType]);
 
   if (loading) return <div className="text-center py-8">Loading surahs...</div>;
 

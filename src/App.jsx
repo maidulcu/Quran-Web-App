@@ -11,6 +11,7 @@ import Header from './components/Header';
 import ScrollToTop from './components/ScrollToTop';
 import AudioPlayerBar from './components/AudioPlayerBar';
 import SettingsDrawer from './components/SettingsDrawer';
+import JuzPage from './pages/JuzPage';
 
 function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -33,6 +34,7 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/bookmarks" element={<Bookmarks />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/juz" element={<JuzPage />} />
         </Routes>
       </div>
       {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
