@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import AyahItem from '../components/AyahItem';
 import { SettingsContext } from '../context/SettingsContext';
 
@@ -63,7 +64,12 @@ export default function Search() {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <>
+      <Helmet>
+        <title>Search the Quran - Quran Web App</title>
+        <meta name="description" content="Search the Holy Quran by word or phrase across all Surahs and translations. View ayahs with Arabic and translation side-by-side." />
+      </Helmet>
+      <div className="p-4 max-w-4xl mx-auto">
       <h2 className="text-xl font-bold mb-4 text-center">🔍 Search the Quran</h2>
       <input
         type="text"
@@ -90,6 +96,7 @@ export default function Search() {
           <p className="text-center text-gray-500 mt-6">No results found.</p>
         )}
       </div>
-    </div>
+      </div>
+    </>
   );
 }

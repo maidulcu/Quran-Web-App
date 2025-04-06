@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 export default function Home() {
   const [popularSurahs, setPopularSurahs] = useState([]);
@@ -19,6 +20,10 @@ export default function Home() {
 
   return (
     <div className="space-y-20 px-4 py-10 max-w-6xl mx-auto">
+      <Helmet>
+        <title>Quran Web App – Read, Listen, and Explore the Quran</title>
+        <meta name="description" content="Explore the Holy Quran online with translations, audio playback, bookmarks, and a beautiful user experience." />
+      </Helmet>
 
       {/* Hero Section */}
       <section className="text-center bg-gradient-to-br from-teal-100 via-white to-teal-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-lg p-10 shadow">

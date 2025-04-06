@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function SurahList() {
@@ -28,7 +29,12 @@ export default function SurahList() {
   if (loading) return <div className="text-center py-8">Loading surahs...</div>;
 
   return (
-    <div className="p-4 max-w-screen-xl mx-auto">
+    <>
+      <Helmet>
+        <title>Surahs of the Quran - Quran Web App</title>
+        <meta name="description" content="Browse all 114 Surahs (chapters) of the Holy Quran by name, number, and type of revelation. Filter by Meccan or Medinan." />
+      </Helmet>
+      <div className="p-4 max-w-screen-xl mx-auto">
       <h1 className="text-2xl font-bold text-center mb-6">📖 Surahs of the Quran</h1>
       <p className="text-center text-gray-600 mb-8">
         Browse all 114 chapters of the Holy Quran
@@ -63,5 +69,6 @@ export default function SurahList() {
         ))}
       </div>
     </div>
+    </>
   );
 }

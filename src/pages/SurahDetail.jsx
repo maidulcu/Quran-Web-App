@@ -4,6 +4,7 @@ import { SettingsContext } from '../context/SettingsContext';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 import MeccanBg from '../assets/meccan-bg.png';
 import MedinanBg from '../assets/medinan-bg.png';
+import { Helmet } from 'react-helmet-async';
 
 const SurahDetail = () => {
   const { id } = useParams();
@@ -129,6 +130,10 @@ const SurahDetail = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
+      <Helmet>
+        <title>Surah {surah.englishName} - Quran Web App</title>
+        <meta name="description" content={`Read Surah ${surah.englishName} (${surah.name}) with translation and audio playback. ${surah.numberOfAyahs} Ayahs - ${surah.revelationType} Revelation.`} />
+      </Helmet>
       <div className="flex items-center justify-between mb-8 gap-6">
         <div className="flex-shrink-0">
           <img
