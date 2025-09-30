@@ -133,6 +133,34 @@ const SurahDetail = () => {
       <Helmet>
         <title>Surah {surah.englishName} - Quran Web App</title>
         <meta name="description" content={`Read Surah ${surah.englishName} (${surah.name}) with translation and audio playback. ${surah.numberOfAyahs} Ayahs - ${surah.revelationType} Revelation.`} />
+        <link rel="canonical" href={`https://quran.learntrueislam.com/surah/${surah.number}`} />
+
+        {/* Open Graph */}
+        <meta property="og:title" content={`Surah ${surah.englishName} - Quran`} />
+        <meta property="og:description" content={`Read Surah ${surah.englishName} (${surah.name}) with translation and audio.`} />
+        <meta property="og:url" content={`https://quran.learntrueislam.com/surah/${surah.number}`} />
+        <meta property="og:type" content="article" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`Surah ${surah.englishName} - Quran`} />
+        <meta name="twitter:description" content={`Read Surah ${surah.englishName} with English translation and audio.`} />
+
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            "name": `Surah ${surah.englishName}`,
+            "description": `Read Surah ${surah.englishName} (${surah.name}) with translation and audio.`,
+            "url": `https://quran.learntrueislam.com/surah/${surah.number}`,
+            "inLanguage": "ar",
+            "isPartOf": {
+              "@type": "Book",
+              "name": "The Holy Quran"
+            }
+          })}
+        </script>
       </Helmet>
       <div className="flex items-center justify-between mb-8 gap-6">
         <div className="flex-shrink-0">
