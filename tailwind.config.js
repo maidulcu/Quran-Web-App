@@ -1,13 +1,18 @@
-export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
-        quran: ['"Uthmanic Hafs"', 'serif'],
-        indopak: ['"PDMS Saleem"', 'serif'],
+        'quran': ['UthmanicHafs1', 'serif'],
+        'indopak': ['PDMS_Saleem_QuranFont', 'serif'],
       },
     },
   },
   plugins: [],
-  darkMode: 'class',
 };

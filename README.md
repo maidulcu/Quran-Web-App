@@ -1,23 +1,23 @@
-# Quran Web App
+# Quran Web App - Next.js
 
-A modern, responsive Quran web application built with **React**, **Vite**, and **Tailwind CSS**. This app allows users to read the Quran, view translations, listen to recitations, and manage bookmarked Ayahs.
+A modern, responsive Quran web application built with **Next.js 14**, **React**, and **Tailwind CSS**. This app allows users to read the Quran, view translations, listen to recitations, and manage bookmarked Ayahs.
 
 ## 🚀 Features
 
 - Browse all 114 Surahs
 - Read Quranic verses in Arabic with translation
 - Search by Ayah or Surah
-- Listen to recitations
 - Bookmark favorite verses
-- Light/Dark mode toggle
 - Responsive and mobile-friendly
+- Server-side rendering for better SEO
+- Production-ready with optimized builds
 
 ## 🛠️ Tech Stack
 
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [AlQuran Cloud API](https://alquran.cloud/api)
+- [Next.js 14](https://nextjs.org/) - React framework with SSR
+- [React 18](https://reactjs.org/) - UI library
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- [AlQuran Cloud API](https://alquran.cloud/api) - Quran data source
 
 ## 📦 Setup Instructions
 
@@ -31,7 +31,22 @@ npm install
 
 # Start development server
 npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
 ```
+
+## 🌐 Production Deployment
+
+The app is production-ready with:
+- Optimized builds and code splitting
+- Server-side rendering (SSR)
+- Static generation for better performance
+- SEO-friendly meta tags
+- Responsive design
 
 ## 📄 License
 

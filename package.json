@@ -1,40 +1,26 @@
 {
   "name": "quran-web-app",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "render:static": "node scripts/render-static.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/maidulcu/Quran-Web-App.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/maidulcu/Quran-Web-App/issues"
-  },
-  "homepage": "https://github.com/maidulcu/Quran-Web-App#readme",
-  "description": "",
   "dependencies": {
+    "next": "14.0.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-helmet": "^6.1.0",
-    "react-helmet-async": "^2.0.5",
-    "react-router-dom": "^7.4.1",
-    "vite-ssg": "^28.1.0"
+    "autoprefixer": "10.4.16",
+    "postcss": "8.4.32",
+    "tailwindcss": "3.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.0.17",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.3",
-    "vite": "^6.2.4"
+    "@types/node": "20.10.5",
+    "@types/react": "18.2.45",
+    "@types/react-dom": "18.2.18",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.0.4",
+    "typescript": "5.3.3"
   }
 }
