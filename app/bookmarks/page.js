@@ -1,21 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useBookmarks } from '../hooks/useBookmarks';
 
 export default function Bookmarks() {
-  const [bookmarks, setBookmarks] = useState([]);
+  const { bookmarks, isLoading, removeBookmark } = useBookmarks();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('bookmarkedAyahs');
-    if (saved) {
-      setBookmarks(JSON.parse(saved));
-    }
-  }, []);
-
-  const removeBookmark = (ayahNumber) => {
-    const updated = bookmarks.filter(b => b.number !== ayahNumber);
-    setBookmarks(updated);
-    localStorage.setItem('bookmarkedAyahs', JSON.stringify(updated));
-  };
+  if (isLoading) {
+    return <div className="container mx-auto px-4 py-8 text-center">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -35,7 +26,7 @@ export default function Bookmarks() {
                   Surah {bookmark.surahNumber}:{bookmark.number}
                 </div>
                 <button
-                  onClick={() => removeBookmark(bookmark.number)}
+                  onClick={() => removeBookmark(bookmark.surahNumber, bookmark.number)}
                   className="text-red-500 hover:text-red-700"
                 >
                   Remove

@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { getAyahMultipleEditions } from '../../../lib/api';
+import { useBookmarks } from '../../../hooks/useBookmarks';
 
 export default function AyahDetail() {
   const { id, ayah } = useParams();
@@ -13,7 +15,8 @@ export default function AyahDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [bookmarked, setBookmarked] = useState(false);
+
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   useEffect(() => {
     const load = async () => {
@@ -21,36 +24,27 @@ export default function AyahDetail() {
       setLoading(true);
       setError(null);
       try {
-        const [arRes, enRes] = await Promise.all([
-          fetch(`https://api.alquran.cloud/v1/ayah/${surahId}:${ayahNumber}/ar.alafasy`),
-          fetch(`https://api.alquran.cloud/v1/ayah/${surahId}:${ayahNumber}/en.sahih`),
-        ]);
-        const ar = await arRes.json();
-        const en = await enRes.json();
+        const result = await getAyahMultipleEditions(surahId, ayahNumber, ['ar.alafasy', 'en.sahih']);
 
-        if (ar.status !== 'OK' || en.status !== 'OK') {
+        if (result.status !== 'OK') {
           throw new Error('Failed to fetch ayah');
         }
 
+        const ar = result.data[0];
+        const en = result.data[1];
+
         const combined = {
-          surahNumber: ar.data.surah?.number,
-          surahName: ar.data.surah?.englishName,
-          surahArabicName: ar.data.surah?.name,
-          number: ar.data.numberInSurah,
-          text: ar.data.text,
-          translationText: en.data.text,
-          audio: ar.data.audio || null,
-          revelationType: ar.data.surah?.revelationType,
-          numberOfAyahs: ar.data.surah?.numberOfAyahs,
+          surahNumber: ar.surah?.number,
+          surahName: ar.surah?.englishName,
+          surahArabicName: ar.surah?.name,
+          number: ar.numberInSurah,
+          text: ar.text,
+          translationText: en.text,
+          audio: ar.audio || null,
+          revelationType: ar.surah?.revelationType,
+          numberOfAyahs: ar.surah?.numberOfAyahs,
         };
         setData(combined);
-
-        // Bookmark state
-        const saved = localStorage.getItem('bookmarkedAyahs');
-        if (saved) {
-          const arr = JSON.parse(saved);
-          setBookmarked(arr.some((b) => b.surahNumber === combined.surahNumber && b.number === combined.number));
-        }
       } catch (e) {
         console.error(e);
         setError('Unable to load ayah');
@@ -61,24 +55,14 @@ export default function AyahDetail() {
     load();
   }, [surahId, ayahNumber]);
 
-  const toggleBookmark = () => {
+  const handleToggleBookmark = () => {
     if (!data) return;
-    const saved = localStorage.getItem('bookmarkedAyahs');
-    const arr = saved ? JSON.parse(saved) : [];
-    const idx = arr.findIndex((b) => b.surahNumber === data.surahNumber && b.number === data.number);
-    if (idx >= 0) {
-      arr.splice(idx, 1);
-      setBookmarked(false);
-    } else {
-      arr.push({
-        surahNumber: data.surahNumber,
-        number: data.number,
-        text: data.text,
-        translationText: data.translationText,
-      });
-      setBookmarked(true);
-    }
-    localStorage.setItem('bookmarkedAyahs', JSON.stringify(arr));
+    toggleBookmark({
+      surahNumber: data.surahNumber,
+      number: data.number,
+      text: data.text,
+      translationText: data.translationText,
+    });
   };
 
   if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>;
@@ -110,10 +94,10 @@ export default function AyahDetail() {
             <audio controls src={data.audio} className="w-full md:w-auto" />
           )}
           <button
-            onClick={toggleBookmark}
-            className={`px-4 py-2 rounded-lg border transition ${bookmarked ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-300' : 'bg-white border-gray-300 text-gray-800 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100'}`}
+            onClick={handleToggleBookmark}
+            className={`px-4 py-2 rounded-lg border transition ${isBookmarked(data.surahNumber, data.number) ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-300' : 'bg-white border-gray-300 text-gray-800 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100'}`}
           >
-            {bookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+            {isBookmarked(data.surahNumber, data.number) ? '★ Bookmarked' : '☆ Bookmark'}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { searchQuran } from '../lib/api';
 
 export default function Search() {
   const searchParams = useSearchParams();
@@ -9,14 +10,12 @@ export default function Search() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const performSearch = async (searchQuery) => {
+    if (!searchQuery.trim()) return;
 
     setLoading(true);
     try {
-      const response = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/en`);
-      const data = await response.json();
+      const data = await searchQuran(searchQuery);
       setResults(data.data?.matches || []);
     } catch (error) {
       console.error('Search error:', error);
@@ -25,21 +24,15 @@ export default function Search() {
     setLoading(false);
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    performSearch(query);
+  };
+
   useEffect(() => {
     if (initialQ.trim()) {
       // Auto-run search when navigated with ?q=
-      (async () => {
-        setLoading(true);
-        try {
-          const response = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(initialQ)}/all/en`);
-          const data = await response.json();
-          setResults(data.data?.matches || []);
-        } catch (error) {
-          console.error('Search error:', error);
-          setResults([]);
-        }
-        setLoading(false);
-      })();
+      performSearch(initialQ);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQ]);
