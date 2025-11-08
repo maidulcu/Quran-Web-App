@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getAyahMultipleEditions } from '../../../lib/api';
 import { useBookmarks } from '../../../hooks/useBookmarks';
+import { useAudioPlayer } from '../../../context/AudioPlayerContext';
+import { logger } from '../../../lib/logger';
 
 export default function AyahDetail() {
   const { id, ayah } = useParams();
@@ -17,6 +19,7 @@ export default function AyahDetail() {
   const [error, setError] = useState(null);
 
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { playAudio, currentAyah, isPlaying } = useAudioPlayer();
 
   useEffect(() => {
     const load = async () => {
@@ -46,7 +49,7 @@ export default function AyahDetail() {
         };
         setData(combined);
       } catch (e) {
-        console.error(e);
+        logger.error(e);
         setError('Unable to load ayah');
       } finally {
         setLoading(false);
@@ -64,6 +67,20 @@ export default function AyahDetail() {
       translationText: data.translationText,
     });
   };
+
+  const handlePlayAudio = () => {
+    if (!data || !data.audio) return;
+    playAudio({
+      surahNumber: data.surahNumber,
+      surahName: data.surahName,
+      number: data.number,
+      audio: data.audio,
+    });
+  };
+
+  const isCurrentlyPlaying = currentAyah?.surahNumber === data?.surahNumber &&
+                            currentAyah?.number === data?.number &&
+                            isPlaying;
 
   if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>;
   if (error || !data) return <div className="container mx-auto px-4 py-8">{error || 'Not found'}</div>;
@@ -90,8 +107,13 @@ export default function AyahDetail() {
 
         <div className="flex flex-wrap items-center gap-3">
           {data.audio && (
-            // For now, use native audio element. Could wire to context later.
-            <audio controls src={data.audio} className="w-full md:w-auto" />
+            <button
+              onClick={handlePlayAudio}
+              className={`px-4 py-2 rounded-lg border transition ${isCurrentlyPlaying ? 'bg-teal-100 border-teal-300 text-teal-800 dark:bg-teal-900/30 dark:border-teal-700 dark:text-teal-300' : 'bg-white border-gray-300 text-gray-800 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100'}`}
+              aria-label="Play audio"
+            >
+              {isCurrentlyPlaying ? '🔊 Playing' : '🔊 Play Audio'}
+            </button>
           )}
           <button
             onClick={handleToggleBookmark}

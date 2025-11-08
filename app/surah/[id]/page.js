@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getSurahMultipleEditions } from '../../lib/api';
+import { logger } from '../../lib/logger';
 
 export default function SurahDetail() {
   const { id } = useParams();
@@ -29,7 +30,7 @@ export default function SurahDetail() {
         });
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching surah:', error);
+        logger.error('Error fetching surah:', error);
         setLoading(false);
       }
     };
