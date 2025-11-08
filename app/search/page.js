@@ -1,37 +1,25 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { searchQuran } from '../lib/api';
+import { useQuranSearch } from '../hooks/useQuranSearch';
 
 export default function Search() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get('q') || '';
-  const [query, setQuery] = useState(initialQ);
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const performSearch = async (searchQuery) => {
-    if (!searchQuery.trim()) return;
-
-    setLoading(true);
-    try {
-      const data = await searchQuran(searchQuery);
-      setResults(data.data?.matches || []);
-    } catch (error) {
-      console.error('Search error:', error);
-      setResults([]);
-    }
-    setLoading(false);
-  };
+  const [inputValue, setInputValue] = useState(initialQ);
+  const { results, loading, error, performSearch } = useQuranSearch();
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    performSearch(query);
+    if (inputValue.trim()) {
+      performSearch(inputValue);
+    }
   };
 
   useEffect(() => {
     if (initialQ.trim()) {
       // Auto-run search when navigated with ?q=
+      setInputValue(initialQ);
       performSearch(initialQ);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,8 +33,8 @@ export default function Search() {
         <div className="flex gap-2">
           <input
             type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
             placeholder="Search for verses..."
             className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
@@ -58,6 +46,11 @@ export default function Search() {
             {loading ? 'Searching...' : 'Search'}
           </button>
         </div>
+        {error && (
+          <div className="mt-2 text-red-600 text-sm">
+            {error}
+          </div>
+        )}
       </form>
 
       <div className="space-y-4">
@@ -73,9 +66,9 @@ export default function Search() {
         ))}
       </div>
 
-      {results.length === 0 && query && !loading && (
+      {results.length === 0 && inputValue && !loading && (
         <div className="text-center text-gray-500 mt-8">
-          No results found for "{query}"
+          No results found for "{inputValue}"
         </div>
       )}
     </div>

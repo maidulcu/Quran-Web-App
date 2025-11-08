@@ -2,10 +2,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getSurahs } from '../lib/api';
+import { usePagination } from '../hooks/usePagination';
+import Pagination from '../components/Pagination';
+import { logger } from '../lib/logger';
 
 export default function SurahList() {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const {
+    paginatedItems,
+    currentPage,
+    totalPages,
+    goToPage,
+    hasNextPage,
+    hasPreviousPage,
+    startIndex,
+    endIndex,
+    totalItems
+  } = usePagination(surahs, 24);
 
   useEffect(() => {
     const fetchSurahs = async () => {
@@ -14,7 +29,7 @@ export default function SurahList() {
         setSurahs(data.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching surahs:', error);
+        logger.error('Error fetching surahs:', error);
         setLoading(false);
       }
     };
@@ -26,10 +41,13 @@ export default function SurahList() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">All Surahs</h1>
-      
+      <h1 className="text-3xl font-bold text-center mb-2">All Surahs</h1>
+      <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
+        Browse all 114 chapters of the Holy Quran
+      </p>
+
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {surahs.map((surah) => (
+        {paginatedItems.map((surah) => (
           <Link
             key={surah.number}
             href={`/surah/${surah.number}`}
@@ -50,6 +68,17 @@ export default function SurahList() {
           </Link>
         ))}
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={goToPage}
+        hasNextPage={hasNextPage}
+        hasPreviousPage={hasPreviousPage}
+        startIndex={startIndex}
+        endIndex={endIndex}
+        totalItems={totalItems}
+      />
     </div>
   );
 }

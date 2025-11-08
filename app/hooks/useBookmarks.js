@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '../lib/logger';
 
 /**
  * Custom hook to manage bookmarked ayahs
@@ -18,7 +19,7 @@ export function useBookmarks() {
         setBookmarks(Array.isArray(parsed) ? parsed : []);
       }
     } catch (error) {
-      console.error('Error loading bookmarks:', error);
+      logger.error('Error loading bookmarks:', error);
       setBookmarks([]);
     } finally {
       setIsLoading(false);
@@ -30,7 +31,7 @@ export function useBookmarks() {
     try {
       localStorage.setItem('bookmarkedAyahs', JSON.stringify(newBookmarks));
     } catch (error) {
-      console.error('Error saving bookmarks:', error);
+      logger.error('Error saving bookmarks:', error);
     }
   }, []);
 
