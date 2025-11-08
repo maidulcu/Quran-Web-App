@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getSurahs } from '../lib/api';
 
 export default function SurahList() {
   const [surahs, setSurahs] = useState([]);
@@ -9,8 +10,7 @@ export default function SurahList() {
   useEffect(() => {
     const fetchSurahs = async () => {
       try {
-        const response = await fetch('https://api.alquran.cloud/v1/surah');
-        const data = await response.json();
+        const data = await getSurahs();
         setSurahs(data.data);
         setLoading(false);
       } catch (error) {

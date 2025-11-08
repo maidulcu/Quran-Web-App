@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { getSurahMultipleEditions } from '../../lib/api';
 
 export default function SurahDetail() {
   const { id } = useParams();
@@ -11,22 +12,19 @@ export default function SurahDetail() {
   useEffect(() => {
     const fetchSurah = async () => {
       try {
-        const [arabicRes, translationRes] = await Promise.all([
-          fetch(`https://api.alquran.cloud/v1/surah/${id}/ar.alafasy`),
-          fetch(`https://api.alquran.cloud/v1/surah/${id}/en.sahih`)
-        ]);
+        const data = await getSurahMultipleEditions(id, ['ar.alafasy', 'en.sahih']);
 
-        const arabicData = await arabicRes.json();
-        const translationData = await translationRes.json();
+        const arabicData = data.data[0];
+        const translationData = data.data[1];
 
-        const combinedAyahs = arabicData.data.ayahs.map((ayah, index) => ({
+        const combinedAyahs = arabicData.ayahs.map((ayah, index) => ({
           text: ayah.text,
-          translationText: translationData.data.ayahs[index]?.text || '',
+          translationText: translationData.ayahs[index]?.text || '',
           number: ayah.numberInSurah
         }));
 
         setSurah({
-          ...arabicData.data,
+          ...arabicData,
           ayahs: combinedAyahs
         });
         setLoading(false);

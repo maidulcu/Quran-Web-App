@@ -1,9 +1,13 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useCallback, memo } from 'react';
 
-export default function Header() {
+const Header = memo(function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
+  }, []);
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-sm border-b">
@@ -12,7 +16,7 @@ export default function Header() {
           <Link href="/" className="text-xl font-bold text-teal-600">
             Quran Web App
           </Link>
-          
+
           <nav className="hidden md:flex space-x-6">
             <Link href="/" className="hover:text-teal-600">Home</Link>
             <Link href="/surahs" className="hover:text-teal-600">Surahs</Link>
@@ -21,8 +25,9 @@ export default function Header() {
           </nav>
 
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={toggleMenu}
             className="md:hidden p-2"
+            aria-label="Toggle menu"
           >
             ☰
           </button>
@@ -41,4 +46,6 @@ export default function Header() {
       </div>
     </header>
   );
-}
+});
+
+export default Header;
