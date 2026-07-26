@@ -6,7 +6,7 @@ import AudioPlayerBar from './components/AudioPlayerBar';
 import ErrorBoundary from './components/ErrorBoundary';
 import MainWrapper from './components/MainWrapper';
 
-const SITE_URL = 'https://quran-web-app.vercel.app';
+const SITE_URL = 'https://quran.learntrueislam.com';
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
