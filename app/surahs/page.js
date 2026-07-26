@@ -62,7 +62,7 @@ export default function SurahList() {
           >
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h3 className="font-semibold">{surah.englishName}</h3>
+                <p className="font-semibold">{surah.englishName}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{surah.name}</p>
               </div>
               <span className="text-sm bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 px-2 py-1 rounded">

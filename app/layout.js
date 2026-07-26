@@ -5,9 +5,35 @@ import Footer from './components/Footer';
 import AudioPlayerBar from './components/AudioPlayerBar';
 import ErrorBoundary from './components/ErrorBoundary';
 
+const SITE_URL = 'https://quran-web-app.vercel.app';
+
 export const metadata = {
-  title: 'Quran Web App',
-  description: 'Read the Quran with translations and audio recitations',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Quran Web App - Read & Listen to the Holy Quran',
+    template: '%s | Quran Web App',
+  },
+  description: 'Read and listen to the Holy Quran with Arabic text, English translation, and high-quality audio recitations from all 114 Surahs.',
+  openGraph: {
+    type: 'website',
+    siteName: 'Quran Web App',
+    locale: 'en_US',
+    title: 'Quran Web App - Read & Listen to the Holy Quran',
+    description: 'Read and listen to the Holy Quran with Arabic text, English translation, and high-quality audio recitations.',
+    url: SITE_URL,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Quran Web App - Read & Listen to the Holy Quran',
+    description: 'Read and listen to the Holy Quran with Arabic text, English translation, and high-quality audio recitations.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
 };
 
 export default function RootLayout({ children }) {

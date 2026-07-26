@@ -87,7 +87,7 @@ export default function Home() {
 
       {/* Popular Surahs */}
       <section className="container mx-auto px-4 pb-16">
-        <h3 className="text-base font-medium text-gray-900 dark:text-white mb-3">Popular Surahs</h3>
+        <h2 className="text-base font-medium text-gray-900 dark:text-white mb-3">Popular Surahs</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {[
             { id: 1, name: 'Al‑Fātiḥah' },

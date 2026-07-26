@@ -1,198 +1,103 @@
-'use client';
-import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { getSurahMultipleEditions } from '../../lib/api';
-import { useAudioPlayer } from '../../context/AudioPlayerContext';
+import SurahDetail from './SurahDetail';
 
-const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
-const SKIP_BISMILLAH_SURAH = [9];
+const SURAH_NAMES = {
+  1: 'Al-Fatihah', 2: 'Al-Baqarah', 3: 'Ali Imran', 4: 'An-Nisa', 5: 'Al-Maidah',
+  6: 'Al-Anam', 7: 'Al-Araf', 8: 'Al-Anfal', 9: 'At-Tawbah', 10: 'Yunus',
+  11: 'Hud', 12: 'Yusuf', 13: 'Ar-Rad', 14: 'Ibrahim', 15: 'Al-Hijr',
+  16: 'An-Nahl', 17: 'Al-Isra', 18: 'Al-Kahf', 19: 'Maryam', 20: 'Taha',
+  21: 'Al-Anbiya', 22: 'Al-Hajj', 23: 'Al-Muminun', 24: 'An-Nur', 25: 'Al-Furqan',
+  26: 'Ash-Shuara', 27: 'An-Naml', 28: 'Al-Qasas', 29: 'Al-Ankabut', 30: 'Ar-Rum',
+  31: 'Luqman', 32: 'As-Sajdah', 33: 'Al-Ahzab', 34: 'Saba', 35: 'Fatir',
+  36: 'Ya-Sin', 37: 'As-Saffat', 38: 'Sad', 39: 'Az-Zumar', 40: 'Ghafir',
+  41: 'Fussilat', 42: 'Ash-Shura', 43: 'Az-Zukhruf', 44: 'Ad-Dukhan', 45: 'Al-Jathiyah',
+  46: 'Al-Ahqaf', 47: 'Muhammad', 48: 'Al-Fath', 49: 'Al-Hujurat', 50: 'Qaf',
+  51: 'Adh-Dhariyat', 52: 'At-Tur', 53: 'An-Najm', 54: 'Al-Qamar', 55: 'Ar-Rahman',
+  56: 'Al-Waqiah', 57: 'Al-Hadid', 58: 'Al-Mujadilah', 59: 'Al-Hashr', 60: 'Al-Mumtahanah',
+  61: 'As-Saff', 62: 'Al-Jumuah', 63: 'Al-Munafiqun', 64: 'At-Taghabun', 65: 'At-Talaq',
+  66: 'At-Tahrim', 67: 'Al-Mulk', 68: 'Al-Qalam', 69: 'Al-Haqqah', 70: 'Al-Maarij',
+  71: 'Nuh', 72: 'Al-Jinn', 73: 'Al-Muzzammil', 74: 'Al-Muddaththir', 75: 'Al-Qiyamah',
+  76: 'Al-Insan', 77: 'Al-Mursalat', 78: 'An-Naba', 79: 'An-Naziat', 80: 'Abasa',
+  81: 'At-Takwir', 82: 'Al-Infitar', 83: 'Al-Mutaffifin', 84: 'Al-Inshiqaq', 85: 'Al-Buruj',
+  86: 'At-Tariq', 87: 'Al-Ala', 88: 'Al-Ghashiyah', 89: 'Al-Fajr', 90: 'Al-Balad',
+  91: 'Ash-Shams', 92: 'Al-Layl', 93: 'Ad-Duha', 94: 'Ash-Sharh', 95: 'At-Tin',
+  96: 'Al-Alaq', 97: 'Al-Qadr', 98: 'Al-Bayyinah', 99: 'Az-Zalzalah', 100: 'Al-Adiyat',
+  101: 'Al-Qariah', 102: 'At-Takathur', 103: 'Al-Asr', 104: 'Al-Humazah', 105: 'Al-Fil',
+  106: 'Quraysh', 107: 'Al-Maun', 108: 'Al-Kawthar', 109: 'Al-Kafirun', 110: 'An-Nasr',
+  111: 'Al-Masad', 112: 'Al-Ikhlas', 113: 'Al-Falaq', 114: 'An-Nas'
+};
 
-export default function SurahDetail() {
-  const { id } = useParams();
-  const [surah, setSurah] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { playAudio, currentAyah, isPlaying } = useAudioPlayer();
+const SURAH_TRANSLATIONS = {
+  1: 'The Opening', 2: 'The Cow', 3: 'Family of Imran', 4: 'The Women', 5: 'The Table Spread',
+  6: 'The Cattle', 7: 'The Heights', 8: 'The Spoils of War', 9: 'The Repentance', 10: 'Jonah',
+  11: 'Hud', 12: 'Joseph', 13: 'The Thunder', 14: 'Abraham', 15: 'The Rocky Tract',
+  16: 'The Bee', 17: 'The Night Journey', 18: 'The Cave', 19: 'Mary', 20: 'Ta-Ha',
+  21: 'The Prophets', 22: 'The Pilgrimage', 23: 'The Believers', 24: 'The Light', 25: 'The Criterion',
+  26: 'The Poets', 27: 'The Ant', 28: 'The Stories', 29: 'The Spider', 30: 'The Romans',
+  31: 'Luqman', 32: 'The Prostration', 33: 'The Combined Forces', 34: 'Sheba', 35: 'The Originator',
+  36: 'Ya-Sin', 37: 'Those Who Set The Ranks', 38: 'Sad', 39: 'The Troops', 40: 'The Forgiver',
+  41: 'Explained in Detail', 42: 'The Consultation', 43: 'The Ornaments of Gold', 44: 'The Smoke', 45: 'The Crouching',
+  46: 'The Wind-Curved Sandhills', 47: 'Muhammad', 48: 'The Victory', 49: 'The Rooms', 50: 'Qaf',
+  51: 'The Winnowing Winds', 52: 'The Mount', 53: 'The Star', 54: 'The Moon', 55: 'The Beneficent',
+  56: 'The Inevitable', 57: 'The Iron', 58: 'The Pleading Woman', 59: 'The Exile', 60: 'She That Is Examined',
+  61: 'The Ranks', 62: 'The Congregation', 63: 'The Hypocrites', 64: 'The Mutual Disillusion', 65: 'The Divorce',
+  66: 'The Prohibition', 67: 'The Sovereignty', 68: 'The Pen', 69: 'The Reality', 70: 'The Ascending Stairways',
+  71: 'Noah', 72: 'The Jinn', 73: 'The Enshrouded One', 74: 'The Cloaked One', 75: 'The Resurrection',
+  76: 'Man', 77: 'The Emissaries', 78: 'The Tidings', 79: 'The Draggers Forth', 80: 'He Frowned',
+  81: 'The Overthrowing', 82: 'The Cleaving', 83: 'The Defrauding', 84: 'The Sundering', 85: 'The Mansions of the Stars',
+  86: 'The Morning Star', 87: 'The Most High', 88: 'The Overwhelming', 89: 'The Dawn', 90: 'The City',
+  91: 'The Sun', 92: 'The Night', 93: 'The Morning Hours', 94: 'The Relief', 95: 'The Fig',
+  96: 'The Clot', 97: 'The Power', 98: 'The Clear Proof', 99: 'The Earthquake', 100: 'The Courser',
+  101: 'The Calamity', 102: 'The Rivalry in Worldly Increase', 103: 'The Declining Day', 104: 'The Traducer', 105: 'The Elephant',
+  106: 'Quraysh', 107: 'The Small Kindnesses', 108: 'The Abundance', 109: 'The Disbelievers', 110: 'The Divine Support',
+  111: 'The Palm Fiber', 112: 'The Sincerity', 113: 'The Daybreak', 114: 'Mankind'
+};
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const fetchSurah = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getSurahMultipleEditions(id, ['ar.alafasy', 'en.sahih']);
+export async function generateMetadata({ params }) {
+  const id = Number(params.id);
+  const name = SURAH_NAMES[id] || `Surah ${id}`;
+  const translation = SURAH_TRANSLATIONS[id] || '';
 
-        if (!controller.signal.aborted) {
-          const arabicData = data.data[0];
-          const translationData = data.data[1];
+  return {
+    title: `${name} (${translation}) - Quran Web App`,
+    description: `Read and listen to Surah ${name}, the ${translation ? translation + ' ' : ''}Quran. Arabic text with English translation and audio recitation.`,
+    openGraph: {
+      title: `Surah ${name} - Quran Web App`,
+      description: `Read and listen to Surah ${name} (${translation}). Arabic text with English translation and audio recitation.`,
+      type: 'article',
+      siteName: 'Quran Web App',
+    },
+    twitter: {
+      card: 'summary',
+      title: `Surah ${name} - Quran Web App`,
+      description: `Read and listen to Surah ${name} (${translation}).`,
+    },
+  };
+}
 
-          const combinedAyahs = arabicData.ayahs.map((ayah, index) => ({
-            text: ayah.text,
-            translationText: translationData.ayahs[index]?.text || '',
-            number: ayah.numberInSurah,
-            audio: ayah.audio || null,
-          }));
+export default async function SurahPage({ params }) {
+  const id = Number(params.id);
+  let initialData = null;
 
-          setSurah({
-            ...arabicData,
-            ayahs: combinedAyahs
-          });
-          setLoading(false);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setError('Failed to load surah. Please try again.');
-          setLoading(false);
-        }
-      }
+  try {
+    const data = await getSurahMultipleEditions(id, ['ar.alafasy', 'en.sahih']);
+    const arabicData = data.data[0];
+    const translationData = data.data[1];
+
+    const combinedAyahs = arabicData.ayahs.map((ayah, index) => ({
+      text: ayah.text,
+      translationText: translationData.ayahs[index]?.text || '',
+      number: ayah.numberInSurah,
+      audio: ayah.audio || null,
+    }));
+
+    initialData = {
+      ...arabicData,
+      ayahs: combinedAyahs
     };
-
-    if (id) fetchSurah();
-    return () => controller.abort();
-  }, [id]);
-
-  const handlePlayAyah = useCallback((ayah) => {
-    playAudio({
-      audio: ayah.audio,
-      surahName: surah?.englishName,
-      number: ayah.number,
-    });
-  }, [playAudio, surah]);
-
-  const isCurrentAyah = useCallback((ayahNumber) => {
-    return currentAyah?.surahName === surah?.englishName && currentAyah?.number === ayahNumber;
-  }, [currentAyah, surah]);
-
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg animate-pulse">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-4" />
-              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  } catch {
+    // Client component will handle the error state
   }
 
-  if (error || !surah) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 max-w-md mx-auto">
-          <svg className="w-12 h-12 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Unable to Load Surah</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'Surah not found'}</p>
-          <div className="flex gap-3 justify-center">
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">Retry</button>
-            <Link href="/surahs" className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Browse Surahs</Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const showBismillah = !SKIP_BISMILLAH_SURAH.includes(surah.number);
-  const prevSurah = surah.number > 1 ? surah.number - 1 : null;
-  const nextSurah = surah.number < 114 ? surah.number + 1 : null;
-
-  return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6" aria-label="Breadcrumb">
-        <Link href="/" className="hover:text-teal-600 transition-colors">Home</Link>
-        <span>/</span>
-        <Link href="/surahs" className="hover:text-teal-600 transition-colors">Surahs</Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white">{surah.englishName}</span>
-      </nav>
-
-      {/* Surah Info Header */}
-      <div className="text-center mb-8 bg-gradient-to-b from-teal-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-        <div lang="ar" className="text-4xl font-quran mb-3 text-teal-800 dark:text-teal-200">
-          {surah.name}
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{surah.englishName}</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          {surah.englishNameTranslation}
-        </p>
-        <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 px-3 py-1 rounded-full">
-            {surah.revelationType}
-          </span>
-          <span>{surah.numberOfAyahs} Ayahs</span>
-        </div>
-      </div>
-
-      {/* Bismillah */}
-      {showBismillah && (
-        <div className="text-center mb-8 py-6">
-          <p lang="ar" className="text-3xl font-quran text-gray-800 dark:text-gray-100 leading-loose">
-            {BISMILLAH}
-          </p>
-        </div>
-      )}
-
-      {/* Ayahs */}
-      <div className="space-y-4">
-        {surah.ayahs.map((ayah) => (
-          <article key={ayah.number} className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 text-xs font-medium px-2.5 py-1 rounded-full">
-                  {surah.number}:{ayah.number}
-                </span>
-                {ayah.audio && (
-                  <button
-                    onClick={() => handlePlayAyah(ayah)}
-                    className={`p-1.5 rounded-full transition-colors ${
-                      isCurrentAyah(ayah.number) && isPlaying
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-teal-900/50'
-                    }`}
-                    aria-label={isCurrentAyah(ayah.number) && isPlaying ? `Pause ayah ${ayah.number}` : `Play ayah ${ayah.number}`}
-                  >
-                    {isCurrentAyah(ayah.number) && isPlaying ? (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    )}
-                  </button>
-                )}
-              </div>
-              <Link href={`/surah/${surah.number}/${ayah.number}`} className="text-xs text-teal-600 hover:text-teal-700" aria-label={`Details for ayah ${ayah.number}`}>
-                Details →
-              </Link>
-            </div>
-            <div lang="ar" dir="rtl" className="text-right text-2xl sm:text-3xl font-quran leading-loose mb-4 text-gray-800 dark:text-gray-100">
-              {ayah.text}
-            </div>
-            <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-              {ayah.translationText}
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {/* Prev/Next Surah Navigation */}
-      <div className="mt-12 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6">
-        {prevSurah ? (
-          <Link href={`/surah/${prevSurah}`} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            <span>Previous Surah</span>
-          </Link>
-        ) : <span />}
-        {nextSurah ? (
-          <Link href={`/surah/${nextSurah}`} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 transition-colors">
-            <span>Next Surah</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-          </Link>
-        ) : <span />}
-      </div>
-    </div>
-  );
+  return <SurahDetail initialData={initialData} />;
 }
