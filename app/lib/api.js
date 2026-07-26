@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = '/api/quran';
+const EXTERNAL_API_BASE = 'https://api.alquran.cloud/v1';
 
 // Simple in-memory cache
 const cache = new Map();
@@ -218,4 +219,42 @@ export async function getTafsirForSurah(surahId, editionId) {
     return getQuranComTafsir(surahId, edition.tafsirId);
   }
   return getAlQuranCloudTafsir(surahId, editionId);
+}
+
+// ── Mushaf Page ─────────────────────────────────────────────────────────
+
+/**
+ * Get a specific Mushaf page (1-604) with Arabic text + translation
+ * @param {number} pageNumber - The page number (1-604)
+ */
+export async function getPage(pageNumber) {
+  const arabicUrl = `${EXTERNAL_API_BASE}/page/${pageNumber}/ar.alafasy`;
+  const translationUrl = `${EXTERNAL_API_BASE}/page/${pageNumber}/en.sahih`;
+
+  const [arabicRes, translationRes] = await Promise.all([
+    fetch(arabicUrl),
+    fetch(translationUrl),
+  ]);
+
+  if (!arabicRes.ok) throw new Error(`Arabic fetch failed: ${arabicRes.status}`);
+  if (!translationRes.ok) throw new Error(`Translation fetch failed: ${translationRes.status}`);
+
+  const arabicData = await arabicRes.json();
+  const translationData = await translationRes.json();
+
+  const arabicAyahs = arabicData.data.ayahs;
+  const translationAyahs = translationData.data.ayahs;
+
+  const mergedAyahs = arabicAyahs.map((ayah, index) => ({
+    ...ayah,
+    translationText: translationAyahs[index]?.text || '',
+  }));
+
+  return {
+    data: {
+      ...arabicData.data,
+      ayahs: mergedAyahs,
+      surahs: arabicData.data.surahs,
+    },
+  };
 }

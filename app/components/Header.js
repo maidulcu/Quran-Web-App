@@ -37,6 +37,7 @@ const Header = memo(function Header() {
           <nav className="hidden md:flex items-center space-x-6">
             <Link href="/" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Home</Link>
             <Link href="/surahs" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Surahs</Link>
+            <Link href="/mushaf/1" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Mushaf</Link>
             <Link href="/juzs" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Juz</Link>
             <Link href="/search" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Search</Link>
             <Link href="/bookmarks" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Bookmarks</Link>
@@ -84,6 +85,7 @@ const Header = memo(function Header() {
           <nav className="flex flex-col space-y-1 border-t pt-2">
             <Link href="/" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Home</Link>
             <Link href="/surahs" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Surahs</Link>
+            <Link href="/mushaf/1" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Mushaf</Link>
             <Link href="/juzs" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Juz</Link>
             <Link href="/search" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Search</Link>
             <Link href="/bookmarks" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Bookmarks</Link>
