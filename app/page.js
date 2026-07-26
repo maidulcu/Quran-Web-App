@@ -21,7 +21,7 @@ export default function Home() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-teal-50 to-white dark:from-gray-900 dark:to-gray-950" />
         <div className="container mx-auto px-4 pt-14 pb-10 sm:pt-20 sm:pb-16">
           <div className="text-center max-w-3xl mx-auto">
-            <div className="text-5xl sm:text-6xl font-quran leading-snug mb-4 text-gray-800 dark:text-gray-100">
+            <div lang="ar" dir="rtl" className="text-5xl sm:text-6xl font-quran leading-snug mb-4 text-gray-800 dark:text-gray-100">
               بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">

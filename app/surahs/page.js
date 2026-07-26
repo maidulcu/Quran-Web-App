@@ -8,21 +8,46 @@ export default function SurahList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchSurahs = async () => {
       try {
         const data = await getSurahs();
-        setSurahs(data.data);
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setSurahs(data.data);
+          setLoading(false);
+        }
       } catch (error) {
-        console.error('Error fetching surahs:', error);
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchSurahs();
+    return () => controller.abort();
   }, []);
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-center mb-8">All Surahs</h1>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(9)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-lg animate-pulse">
+              <div className="flex justify-between items-start mb-2">
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16" />
+                </div>
+                <div className="h-6 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

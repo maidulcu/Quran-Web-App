@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import Link from 'next/link';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -13,6 +14,12 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.children !== this.props.children && this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
   }
 
   render() {
@@ -36,12 +43,20 @@ class ErrorBoundary extends React.Component {
                 </pre>
               </details>
             )}
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition"
-            >
-              Reload Page
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition"
+              >
+                Reload Page
+              </button>
+              <Link
+                href="/"
+                className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Go Home
+              </Link>
+            </div>
           </div>
         </div>
       );

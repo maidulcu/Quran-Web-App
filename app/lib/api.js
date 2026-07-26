@@ -3,7 +3,7 @@
  * Provides caching and error handling for all API requests
  */
 
-const API_BASE_URL = 'https://api.alquran.cloud/v1';
+const API_BASE_URL = '/api/quran';
 
 // Simple in-memory cache
 const cache = new Map();
