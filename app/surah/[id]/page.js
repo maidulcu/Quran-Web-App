@@ -1,6 +1,7 @@
 import { getSurahMultipleEditions } from '../../lib/api';
 import { getSurahInfo } from '../../lib/surahInfo';
 import SurahDetail from './SurahDetail';
+import JsonLd from '../../components/JsonLd';
 
 const SURAH_NAMES = {
   1: 'Al-Fatihah', 2: 'Al-Baqarah', 3: 'Ali Imran', 4: 'An-Nisa', 5: 'Al-Maidah',
@@ -133,10 +134,7 @@ export default async function SurahPage({ params }) {
 
   return (
     <div>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-      />
+      <JsonLd data={schema} />
       <SurahDetail initialData={initialData} />
     </div>
   );
