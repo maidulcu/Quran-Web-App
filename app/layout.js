@@ -4,6 +4,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import AudioPlayerBar from './components/AudioPlayerBar';
 import ErrorBoundary from './components/ErrorBoundary';
+import MainWrapper from './components/MainWrapper';
 
 const SITE_URL = 'https://quran-web-app.vercel.app';
 
@@ -59,9 +60,7 @@ export default function RootLayout({ children }) {
           <AudioPlayerProvider>
             <div className="flex flex-col min-h-screen">
               <Header />
-              <main id="main-content" className="flex-grow">
-                {children}
-              </main>
+              <MainWrapper>{children}</MainWrapper>
               <AudioPlayerBar />
               <Footer />
             </div>

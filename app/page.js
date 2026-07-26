@@ -82,45 +82,26 @@ export default function Home() {
       {/* Quick actions */}
       <section className="container mx-auto px-4 pb-12">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link href="/surahs" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Browse Surahs</h2>
-              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Navigate all chapters with details and metadata.</p>
-          </Link>
-
-          <Link href="/search" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Search</h2>
-              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Find verses by keywords and topics.</p>
-          </Link>
-
-          <Link href="/bookmarks" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Bookmarks</h2>
-              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Save and revisit your favorite Ayahs.</p>
-          </Link>
-
-          <Link href="/mushaf/1" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Mushaf View</h2>
-              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Page-by-page reading like a physical Quran.</p>
-          </Link>
-
-          <Link href="/progress" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
-            <div className="flex items-start justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Reading Progress</h2>
-              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
-            </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-400">Track your Quran reading journey across all surahs.</p>
-          </Link>
+          {[
+            { href: '/surahs', title: 'Browse Surahs', desc: 'Navigate all chapters with details and metadata.' },
+            { href: '/search', title: 'Advanced Search', desc: 'Find verses by keywords and topics.' },
+            { href: '/bookmarks', title: 'Bookmarks', desc: 'Save and revisit your favorite Ayahs.' },
+            { href: '/mushaf/1', title: 'Mushaf View', desc: 'Page-by-page reading like a physical Quran.' },
+            { href: '/progress', title: 'Reading Progress', desc: 'Track your Quran reading journey across all surahs.' },
+          ].map((card, i) => (
+            <Link
+              key={card.href}
+              href={card.href}
+              className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <div className="flex items-start justify-between">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{card.title}</h2>
+                <span className="text-teal-600 group-hover:translate-x-1 transition-transform duration-200">→</span>
+              </div>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">{card.desc}</p>
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -134,11 +115,12 @@ export default function Home() {
             { id: 18, name: 'Al‑Kahf' },
             { id: 36, name: 'Yā‑Sīn' },
             { id: 55, name: 'Ar‑Raḥmān' },
-          ].map((s) => (
+          ].map((s, i) => (
             <Link
               key={s.id}
               href={`/surah/${s.id}`}
-              className="rounded-lg bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-800 dark:text-gray-100 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md hover:ring-teal-200/80 transition"
+              className="rounded-lg bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-800 dark:text-gray-100 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md hover:ring-teal-200/80 hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               <span className="block font-medium">{s.name}</span>
               <span className="text-gray-500 text-xs">Surah {s.id}</span>
