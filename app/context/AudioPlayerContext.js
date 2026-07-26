@@ -3,6 +3,8 @@ import { createContext, useContext, useState, useRef, useCallback, useEffect } f
 
 const AudioPlayerContext = createContext();
 
+const REPEAT_MODES = ['none', 'one', 'three', 'five', 'all'];
+
 export function AudioPlayerProvider({ children }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAyah, setCurrentAyah] = useState(null);
@@ -10,6 +12,8 @@ export function AudioPlayerProvider({ children }) {
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRateState] = useState(1);
+  const [repeatMode, setRepeatMode] = useState('none');
+  const repeatCountRef = useRef(0);
   const audioRef = useRef(null);
   const playAudioRef = useRef(null);
 
@@ -18,6 +22,7 @@ export function AudioPlayerProvider({ children }) {
     if (!audio || !ayah?.audio) return;
 
     setCurrentAyah(ayah);
+    repeatCountRef.current = 0;
     audio.src = ayah.audio;
     audio.playbackRate = playbackRate;
     audio.play().then(() => {
@@ -48,15 +53,43 @@ export function AudioPlayerProvider({ children }) {
     };
 
     const onEnded = () => {
-      setIsPlaying(false);
       setProgress(0);
+
+      const mode = repeatCountRef.current.mode;
+      const count = repeatCountRef.current.count;
+
+      // Handle repeat modes
+      if (mode === 'one') {
+        // Repeat current ayah indefinitely
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+        return;
+      }
+
+      if (mode === 'three' || mode === 'five') {
+        const max = mode === 'three' ? 3 : 5;
+        repeatCountRef.current.count++;
+        if (repeatCountRef.current.count < max) {
+          audio.currentTime = 0;
+          audio.play().catch(() => {});
+          return;
+        }
+        // Reset count and advance
+        repeatCountRef.current.count = 0;
+      }
+
+      // Advance to next in queue
       setQueue(prev => {
         if (prev.length > 0) {
           const next = prev[0];
           const remaining = prev.slice(1);
+          repeatCountRef.current = { mode, count: 0 };
           setTimeout(() => playAudioRef.current?.(next), 300);
           return remaining;
         }
+        // No queue — stop
+        setIsPlaying(false);
+        repeatCountRef.current = { mode: 'none', count: 0 };
         return prev;
       });
     };
@@ -123,6 +156,16 @@ export function AudioPlayerProvider({ children }) {
     setPlaybackRateState(rate);
   }, []);
 
+  const cycleRepeatMode = useCallback(() => {
+    setRepeatMode(prev => {
+      const currentIndex = REPEAT_MODES.indexOf(prev);
+      const nextIndex = (currentIndex + 1) % REPEAT_MODES.length;
+      const nextMode = REPEAT_MODES[nextIndex];
+      repeatCountRef.current = { mode: nextMode, count: 0 };
+      return nextMode;
+    });
+  }, []);
+
   return (
     <AudioPlayerContext.Provider value={{
       isPlaying,
@@ -131,13 +174,15 @@ export function AudioPlayerProvider({ children }) {
       progress,
       duration,
       playbackRate,
+      repeatMode,
       playAudio,
       pauseAudio,
       togglePlayPause,
       stopAudio,
       seekTo,
       setPlaybackRate,
-      setQueue
+      setQueue,
+      cycleRepeatMode
     }}>
       {children}
     </AudioPlayerContext.Provider>

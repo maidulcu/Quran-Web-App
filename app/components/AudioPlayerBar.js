@@ -5,11 +5,13 @@ import { useAudioPlayer } from '../context/AudioPlayerContext';
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 export default function AudioPlayerBar() {
-  const { isPlaying, currentAyah, progress, queue, playbackRate, togglePlayPause, seekTo, setPlaybackRate, playAudio, setQueue } = useAudioPlayer();
+  const { isPlaying, currentAyah, progress, queue, playbackRate, repeatMode, togglePlayPause, seekTo, setPlaybackRate, playAudio, setQueue, cycleRepeatMode } = useAudioPlayer();
   const [showSpeeds, setShowSpeeds] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
 
   if (!currentAyah) return null;
+
+  const REPEAT_LABELS = { none: 'Off', one: '1x', three: '3x', five: '5x', all: '∞' };
 
   const removeFromQueue = (index) => {
     setQueue(queue.filter((_, i) => i !== index));
@@ -142,6 +144,20 @@ export default function AudioPlayerBar() {
             </div>
           )}
         </div>
+
+        {/* Repeat mode */}
+        <button
+          onClick={cycleRepeatMode}
+          className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+            repeatMode !== 'none'
+              ? 'bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+          }`}
+          aria-label={`Repeat: ${REPEAT_LABELS[repeatMode]}`}
+          title={`Repeat: ${REPEAT_LABELS[repeatMode]}`}
+        >
+          {repeatMode === 'all' ? '∞' : REPEAT_LABELS[repeatMode]}
+        </button>
 
         {/* Play/Pause button */}
         <button
