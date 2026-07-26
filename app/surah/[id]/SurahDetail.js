@@ -11,6 +11,7 @@ import { useTajweed } from '../../hooks/useTajweed';
 import { useTranslations } from '../../hooks/useTranslations';
 import { useReadingProgress } from '../../hooks/useReadingProgress';
 import { parseTajweedText } from '../../lib/tajweed';
+import { getSurahInfo } from '../../lib/surahInfo';
 import TafsirSelector from '../../components/TafsirSelector';
 import TajweedToggle from '../../components/TajweedToggle';
 import TranslationSelector from '../../components/TranslationSelector';
@@ -37,6 +38,7 @@ export default function SurahDetail({ initialData }) {
   const [tafsirData, setTafsirData] = useState({});
   const [tafsirLoading, setTafsirLoading] = useState(false);
   const [expandedTafsir, setExpandedTafsir] = useState({});
+  const [showIntro, setShowIntro] = useState(true);
 
   // Track reading progress
   useEffect(() => {
@@ -258,6 +260,7 @@ export default function SurahDetail({ initialData }) {
   const showBismillah = !SKIP_BISMILLAH_SURAH.includes(surah.number);
   const prevSurah = surah.number > 1 ? surah.number - 1 : null;
   const nextSurah = surah.number < 114 ? surah.number + 1 : null;
+  const surahInfo = getSurahInfo(surah.number);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -275,9 +278,11 @@ export default function SurahDetail({ initialData }) {
         <div lang="ar" className={`text-4xl mb-3 text-teal-800 dark:text-teal-200 ${fontClass}`}>
           {surah.name}
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{surah.englishName}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+          Surah {surah.englishName} <span className="text-gray-500 dark:text-gray-400 font-normal">({surah.englishNameTranslation})</span>
+        </h1>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          {surah.englishNameTranslation}
+          {surah.englishNameTranslation} &bull; Chapter {surah.number} &bull; {surah.numberOfAyahs} Verses
         </p>
         <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 px-3 py-1 rounded-full">
@@ -325,6 +330,83 @@ export default function SurahDetail({ initialData }) {
           <p lang="ar" className={`text-3xl text-gray-800 dark:text-gray-100 leading-loose ${fontClass}`}>
             {BISMILLAH}
           </p>
+        </div>
+      )}
+
+      {/* Surah Introduction */}
+      {surahInfo.summary && (
+        <div className="mb-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60">
+          <button
+            onClick={() => setShowIntro(!showIntro)}
+            className="flex items-center gap-2 text-left w-full"
+            aria-expanded={showIntro}
+          >
+            <svg
+              className={`w-5 h-5 text-teal-600 transition-transform ${showIntro ? 'rotate-90' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Introduction to Surah {surah.englishName}
+            </h2>
+          </button>
+
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showIntro ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+              {surahInfo.summary}
+            </p>
+
+            {surahInfo.themes.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Key Themes</h3>
+                <div className="flex flex-wrap gap-2">
+                  {surahInfo.themes.map((theme, i) => (
+                    <span key={i} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full">
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {surahInfo.virtues && (
+              <div className="bg-teal-50/50 dark:bg-teal-900/10 rounded-lg p-4 mt-3">
+                <h3 className="text-sm font-semibold text-teal-700 dark:text-teal-300 mb-1">Virtues &amp; Benefits</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {surahInfo.virtues}
+                </p>
+              </div>
+            )}
+
+            {surahInfo.famousVerses.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Notable Verses</h3>
+                <div className="space-y-2">
+                  {surahInfo.famousVerses.map((verse, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        const el = ayahRefs.current[verse.ayah];
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }}
+                      className="flex items-start gap-3 text-left w-full p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
+                        {surah.number}:{verse.ayah}
+                      </span>
+                      <div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{verse.name}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{verse.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -462,6 +544,48 @@ export default function SurahDetail({ initialData }) {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </Link>
         ) : <span />}
+      </div>
+
+      {/* Related Resources */}
+      <div className="mt-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Explore More</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Link
+            href="/surahs"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+          >
+            <div className="bg-teal-100 dark:bg-teal-900/50 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Browse All Surahs</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">114 chapters of the Quran</p>
+            </div>
+          </Link>
+          <Link
+            href="/mushaf/1"
+            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
+          >
+            <div className="bg-teal-100 dark:bg-teal-900/50 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Mushaf View</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Read page by page like a physical Quran</p>
+            </div>
+          </Link>
+        </div>
+        <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+          Learn more about the Quran at{' '}
+          <a
+            href="https://learntrueislam.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-teal-600 hover:text-teal-700 underline"
+          >
+            learntrueislam.com
+          </a>
+        </p>
       </div>
     </div>
   );

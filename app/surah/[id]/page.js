@@ -1,4 +1,5 @@
 import { getSurahMultipleEditions } from '../../lib/api';
+import { getSurahInfo } from '../../lib/surahInfo';
 import SurahDetail from './SurahDetail';
 
 const SURAH_NAMES = {
@@ -57,20 +58,26 @@ export async function generateMetadata({ params }) {
   const id = Number(params.id);
   const name = SURAH_NAMES[id] || `Surah ${id}`;
   const translation = SURAH_TRANSLATIONS[id] || '';
+  const info = getSurahInfo(id);
+
+  const description = info.summary
+    ? `${info.summary.substring(0, 155)}...`
+    : `Read and listen to Surah ${name} (${translation}). Arabic text with Sahih International English translation and audio recitation. Full chapter with all ${id === 2 ? '286' : ''} verses.`;
 
   return {
-    title: `${name} (${translation}) - Quran Web App`,
-    description: `Read and listen to Surah ${name}, the ${translation ? translation + ' ' : ''}Quran. Arabic text with English translation and audio recitation.`,
+    title: `Surah ${name} (${translation}) - Full Arabic Text & English Translation | Quran Web App`,
+    description,
+    keywords: [`Surah ${name}`, `Surah ${name} ${translation}`, `Quran Chapter ${id}`, 'Quran with English translation', 'Read Quran online', 'Arabic Quran text'],
     openGraph: {
-      title: `Surah ${name} - Quran Web App`,
-      description: `Read and listen to Surah ${name} (${translation}). Arabic text with English translation and audio recitation.`,
+      title: `Surah ${name} (${translation}) - Full Arabic Text & English Translation`,
+      description,
       type: 'article',
       siteName: 'Quran Web App',
     },
     twitter: {
       card: 'summary',
-      title: `Surah ${name} - Quran Web App`,
-      description: `Read and listen to Surah ${name} (${translation}).`,
+      title: `Surah ${name} (${translation}) - Full Arabic Text & English Translation`,
+      description,
     },
   };
 }
@@ -99,5 +106,38 @@ export default async function SurahPage({ params }) {
     // Client component will handle the error state
   }
 
-  return <SurahDetail initialData={initialData} />;
+  const name = SURAH_NAMES[id] || `Surah ${id}`;
+  const translation = SURAH_TRANSLATIONS[id] || '';
+  const info = getSurahInfo(id);
+
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: `Surah ${name} (${translation})`,
+    alternateName: name,
+    description: info.summary || `Full text of Surah ${name} with English translation from the Holy Quran.`,
+    numberOfPages: initialData?.numberOfAyahs || 0,
+    bookFormat: 'https://schema.org/EBook',
+    author: {
+      '@type': 'Organization',
+      name: 'Holy Quran',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Quran Web App',
+      url: 'https://quran.learntrueislam.com',
+    },
+    inLanguage: ['ar', 'en'],
+    url: `https://quran.learntrueislam.com/surah/${id}`,
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      <SurahDetail initialData={initialData} />
+    </>
+  );
 }
