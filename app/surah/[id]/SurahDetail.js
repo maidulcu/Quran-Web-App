@@ -23,7 +23,7 @@ export default function SurahDetail({ initialData }) {
   const [error, setError] = useState(null);
   const [copiedAyah, setCopiedAyah] = useState(null);
   const ayahRefs = useRef({});
-  const { playAudio, currentAyah, isPlaying } = useAudioPlayer();
+  const { playAudio, currentAyah, isPlaying, setQueue } = useAudioPlayer();
   const { saveLastRead } = useLastRead();
   const { fontClass, font, toggleFont } = useFont();
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
@@ -142,13 +142,34 @@ export default function SurahDetail({ initialData }) {
     return () => { cancelled = true; };
   }, [surah, tajweedEnabled]);
 
+  // Auto-scroll to current ayah during playback
+  useEffect(() => {
+    if (!currentAyah || !surah) return;
+    if (currentAyah.surahName !== surah.englishName) return;
+    const el = ayahRefs.current[currentAyah.number];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [currentAyah, surah]);
+
   const handlePlayAyah = useCallback((ayah) => {
     playAudio({
       audio: ayah.audio,
       surahName: surah?.englishName,
       number: ayah.number,
     });
-  }, [playAudio, surah]);
+    if (surah?.ayahs) {
+      const currentIndex = surah.ayahs.findIndex(a => a.number === ayah.number);
+      if (currentIndex >= 0) {
+        const nextAyahs = surah.ayahs.slice(currentIndex + 1).map(a => ({
+          audio: a.audio,
+          surahName: surah.englishName,
+          number: a.number,
+        }));
+        setQueue(nextAyahs);
+      }
+    }
+  }, [playAudio, surah, setQueue]);
 
   const toggleTafsirAyah = useCallback((ayahNumber) => {
     setExpandedTafsir(prev => ({ ...prev, [ayahNumber]: !prev[ayahNumber] }));
@@ -296,7 +317,11 @@ export default function SurahDetail({ initialData }) {
             key={ayah.number}
             ref={(el) => { ayahRefs.current[ayah.number] = el; }}
             data-ayah={ayah.number}
-            className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-shadow"
+            className={`bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow-sm ring-1 transition-all duration-300 ${
+              isCurrentAyah(ayah.number) && isPlaying
+                ? 'ring-2 ring-teal-400 bg-teal-50 dark:bg-teal-900/20 shadow-md'
+                : 'ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md'
+            }`}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">

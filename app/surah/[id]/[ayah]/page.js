@@ -230,7 +230,11 @@ export default function AyahDetail() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow ring-1 ring-gray-200/60 dark:ring-gray-700/60">
+      <div className={`p-6 rounded-xl shadow transition-all duration-300 ${
+          isCurrentAyah && isPlaying
+            ? 'bg-teal-50 dark:bg-teal-900/20 ring-2 ring-teal-400'
+            : 'bg-white dark:bg-gray-800 ring-1 ring-gray-200/60 dark:ring-gray-700/60'
+        }`}>
         <div
           lang="ar"
           dir="rtl"
