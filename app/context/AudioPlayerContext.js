@@ -9,6 +9,7 @@ export function AudioPlayerProvider({ children }) {
   const [queue, setQueue] = useState([]);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRateState] = useState(1);
   const audioRef = useRef(null);
   const playAudioRef = useRef(null);
 
@@ -18,12 +19,13 @@ export function AudioPlayerProvider({ children }) {
 
     setCurrentAyah(ayah);
     audio.src = ayah.audio;
+    audio.playbackRate = playbackRate;
     audio.play().then(() => {
       setIsPlaying(true);
     }).catch(() => {
       setIsPlaying(false);
     });
-  }, []);
+  }, [playbackRate]);
 
   useEffect(() => {
     playAudioRef.current = playAudio;
@@ -113,6 +115,14 @@ export function AudioPlayerProvider({ children }) {
     }
   }, []);
 
+  const setPlaybackRate = useCallback((rate) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.playbackRate = rate;
+    }
+    setPlaybackRateState(rate);
+  }, []);
+
   return (
     <AudioPlayerContext.Provider value={{
       isPlaying,
@@ -120,11 +130,13 @@ export function AudioPlayerProvider({ children }) {
       queue,
       progress,
       duration,
+      playbackRate,
       playAudio,
       pauseAudio,
       togglePlayPause,
       stopAudio,
       seekTo,
+      setPlaybackRate,
       setQueue
     }}>
       {children}

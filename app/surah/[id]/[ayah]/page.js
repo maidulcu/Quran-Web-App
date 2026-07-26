@@ -16,6 +16,7 @@ export default function AyahDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { playAudio, currentAyah, isPlaying, togglePlayPause } = useAudioPlayer();
@@ -82,6 +83,37 @@ export default function AyahDetail() {
       number: data.number,
     });
   }, [data, playAudio]);
+
+  const handleCopy = useCallback(async () => {
+    if (!data) return;
+    const text = `${data.text}\n\n${data.translationText}\n\n— Surah ${data.surahName} ${data.number}`;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [data]);
+
+  const handleShare = useCallback(async () => {
+    if (!data) return;
+    const shareData = {
+      text: `${data.text}\n\n${data.translationText}\n\n— Surah ${data.surahName} ${data.number}`,
+      title: `Surah ${data.surahName} ${data.number}`,
+    };
+
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch {}
+    } else {
+      await handleCopy();
+    }
+  }, [data, handleCopy]);
 
   if (loading) {
     return (
@@ -164,6 +196,23 @@ export default function AyahDetail() {
               {isCurrentAyah && isPlaying ? 'Pause' : 'Play Audio'}
             </button>
           )}
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            {copied ? (
+              <><svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Copied!</>
+            ) : (
+              <><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copy</>
+            )}
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            Share
+          </button>
           <button
             onClick={handleToggleBookmark}
             className={`px-4 py-2 rounded-lg border transition ${isBookmarked(data.surahNumber, data.number) ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-300' : 'bg-white border-gray-300 text-gray-800 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100'}`}

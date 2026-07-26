@@ -2,10 +2,12 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useLastRead } from './hooks/useLastRead';
 
 export default function Home() {
   const router = useRouter();
   const [q, setQ] = useState('');
+  const { lastRead } = useLastRead();
 
   const submit = (e) => {
     e.preventDefault();
@@ -55,6 +57,27 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Continue Reading */}
+      {lastRead && (
+        <section className="container mx-auto px-4 pb-8">
+          <Link
+            href={`/surah/${lastRead.surahNumber}/${lastRead.ayahNumber}`}
+            className="block bg-gradient-to-r from-teal-50 to-teal-100/50 dark:from-teal-900/30 dark:to-teal-800/20 rounded-xl p-5 ring-1 ring-teal-200/60 dark:ring-teal-700/40 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <div>
+                <p className="text-sm text-teal-700 dark:text-teal-300 font-medium">Continue Reading</p>
+                <p className="text-gray-900 dark:text-white font-semibold">{lastRead.surahName} • Ayah {lastRead.ayahNumber}</p>
+              </div>
+              <svg className="w-5 h-5 text-teal-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </Link>
+        </section>
+      )}
 
       {/* Quick actions */}
       <section className="container mx-auto px-4 pb-12">

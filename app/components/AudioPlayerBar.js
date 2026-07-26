@@ -1,8 +1,12 @@
 'use client';
+import { useState } from 'react';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
 export default function AudioPlayerBar() {
-  const { isPlaying, currentAyah, progress, togglePlayPause, seekTo } = useAudioPlayer();
+  const { isPlaying, currentAyah, progress, playbackRate, togglePlayPause, seekTo, setPlaybackRate } = useAudioPlayer();
+  const [showSpeeds, setShowSpeeds] = useState(false);
 
   if (!currentAyah) return null;
 
@@ -30,14 +34,39 @@ export default function AudioPlayerBar() {
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-teal-600 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
-      <div className="container mx-auto flex items-center justify-between px-4 py-3">
+      <div className="container mx-auto flex items-center justify-between px-4 py-3 gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm truncate">{currentAyah.surahName}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400">Ayah {currentAyah.number}</p>
         </div>
+
+        {/* Speed control */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSpeeds(!showSpeeds)}
+            className="px-2 py-1 text-xs font-medium rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label={`Playback speed: ${playbackRate}x`}
+          >
+            {playbackRate}x
+          </button>
+          {showSpeeds && (
+            <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[60px]">
+              {SPEEDS.map((speed) => (
+                <button
+                  key={speed}
+                  onClick={() => { setPlaybackRate(speed); setShowSpeeds(false); }}
+                  className={`block w-full text-center px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${speed === playbackRate ? 'text-teal-600 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <button
           onClick={togglePlayPause}
-          className="ml-4 bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className="bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
