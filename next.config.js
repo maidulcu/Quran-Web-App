@@ -9,6 +9,10 @@ const nextConfig = {
         source: '/api/quran/:path*',
         destination: 'https://api.alquran.cloud/v1/:path*',
       },
+      {
+        source: '/api/quran-com/:path*',
+        destination: 'https://api.quran.com/api/v4/:path*',
+      },
     ];
   },
 };

@@ -2,10 +2,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSurahMultipleEditions } from '../../lib/api';
+import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition } from '../../lib/api';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import { useLastRead } from '../../hooks/useLastRead';
 import { useFont } from '../../hooks/useFont';
+import { useTafsir } from '../../hooks/useTafsir';
+import TafsirSelector from '../../components/TafsirSelector';
 
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
@@ -20,6 +22,10 @@ export default function SurahDetail({ initialData }) {
   const { playAudio, currentAyah, isPlaying } = useAudioPlayer();
   const { saveLastRead } = useLastRead();
   const { fontClass, font, toggleFont } = useFont();
+  const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
+  const [tafsirData, setTafsirData] = useState({});
+  const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [expandedTafsir, setExpandedTafsir] = useState({});
 
   // Track reading progress
   useEffect(() => {
@@ -81,6 +87,28 @@ export default function SurahDetail({ initialData }) {
     return () => controller.abort();
   }, [id, initialData]);
 
+  // Fetch tafsir when enabled or edition changes
+  useEffect(() => {
+    if (!tafsirEnabled || !surah) {
+      setTafsirData({});
+      return;
+    }
+    let cancelled = false;
+    const fetchTafsir = async () => {
+      setTafsirLoading(true);
+      try {
+        const data = await getTafsirForSurah(surah.number, tafsirEdition);
+        if (!cancelled) setTafsirData(data);
+      } catch {
+        if (!cancelled) setTafsirData({});
+      } finally {
+        if (!cancelled) setTafsirLoading(false);
+      }
+    };
+    fetchTafsir();
+    return () => { cancelled = true; };
+  }, [surah, tafsirEnabled, tafsirEdition]);
+
   const handlePlayAyah = useCallback((ayah) => {
     playAudio({
       audio: ayah.audio,
@@ -88,6 +116,10 @@ export default function SurahDetail({ initialData }) {
       number: ayah.number,
     });
   }, [playAudio, surah]);
+
+  const toggleTafsirAyah = useCallback((ayahNumber) => {
+    setExpandedTafsir(prev => ({ ...prev, [ayahNumber]: !prev[ayahNumber] }));
+  }, []);
 
   const isCurrentAyah = useCallback((ayahNumber) => {
     return currentAyah?.surahName === surah?.englishName && currentAyah?.number === ayahNumber;
@@ -189,15 +221,26 @@ export default function SurahDetail({ initialData }) {
           <span>{surah.numberOfAyahs} Ayahs</span>
         </div>
 
-        {/* Font toggle */}
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <span className="text-xs text-gray-500">Font:</span>
-          <button
-            onClick={toggleFont}
-            className="text-xs px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800/50 transition-colors"
-          >
-            {font === 'Uthmanic' ? 'Uthmanic' : 'Indo-Pak'} → {font === 'Uthmanic' ? 'Indo-Pak' : 'Uthmanic'}
-          </button>
+        {/* Controls */}
+        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+          {/* Font toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Font:</span>
+            <button
+              onClick={toggleFont}
+              className="text-xs px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800/50 transition-colors"
+            >
+              {font === 'Uthmanic' ? 'Uthmanic' : 'Indo-Pak'} → {font === 'Uthmanic' ? 'Indo-Pak' : 'Uthmanic'}
+            </button>
+          </div>
+
+          {/* Tafsir selector */}
+          <TafsirSelector
+            enabled={tafsirEnabled}
+            edition={tafsirEdition}
+            onToggle={toggleTafsir}
+            onSelectEdition={selectEdition}
+          />
         </div>
       </div>
 
@@ -276,6 +319,40 @@ export default function SurahDetail({ initialData }) {
             <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               {ayah.translationText}
             </div>
+
+            {/* Tafsir section */}
+            {tafsirEnabled && tafsirData[ayah.number] && (
+              <div className="mt-3 border-t border-gray-100 dark:border-gray-700/50 pt-3">
+                <button
+                  onClick={() => toggleTafsirAyah(ayah.number)}
+                  className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors w-full"
+                  aria-expanded={!!expandedTafsir[ayah.number]}
+                >
+                  <svg
+                    className={`w-3 h-3 transition-transform ${expandedTafsir[ayah.number] ? 'rotate-90' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span className="font-medium">{getTafsirEdition(tafsirEdition)?.name || 'Tafsir'}</span>
+                  {tafsirLoading && !tafsirData[ayah.number] && (
+                    <span className="text-gray-400">Loading...</span>
+                  )}
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    expandedTafsir[ayah.number] ? 'max-h-[2000px] opacity-100 mt-2' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div
+                    className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: tafsirData[ayah.number] }}
+                  />
+                </div>
+              </div>
+            )}
           </article>
         ))}
       </div>

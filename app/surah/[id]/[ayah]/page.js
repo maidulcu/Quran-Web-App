@@ -2,9 +2,11 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getAyahMultipleEditions } from '../../../lib/api';
+import { getAyahMultipleEditions, getTafsirForSurah, getTafsirEdition } from '../../../lib/api';
 import { useBookmarks } from '../../../hooks/useBookmarks';
 import { useAudioPlayer } from '../../../context/AudioPlayerContext';
+import { useTafsir } from '../../../hooks/useTafsir';
+import TafsirSelector from '../../../components/TafsirSelector';
 
 export default function AyahDetail() {
   const { id, ayah } = useParams();
@@ -20,6 +22,10 @@ export default function AyahDetail() {
 
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { playAudio, currentAyah, isPlaying, togglePlayPause } = useAudioPlayer();
+  const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
+  const [tafsirData, setTafsirData] = useState({});
+  const [tafsirLoading, setTafsirLoading] = useState(false);
+  const [showTafsir, setShowTafsir] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -63,6 +69,32 @@ export default function AyahDetail() {
     load();
     return () => controller.abort();
   }, [surahId, ayahNumber]);
+
+  // Fetch tafsir when enabled
+  useEffect(() => {
+    if (!tafsirEnabled || !surahId) {
+      setTafsirData({});
+      setShowTafsir(false);
+      return;
+    }
+    let cancelled = false;
+    const fetchTafsir = async () => {
+      setTafsirLoading(true);
+      try {
+        const data = await getTafsirForSurah(surahId, tafsirEdition);
+        if (!cancelled) {
+          setTafsirData(data);
+          if (data[ayahNumber]) setShowTafsir(true);
+        }
+      } catch {
+        if (!cancelled) setTafsirData({});
+      } finally {
+        if (!cancelled) setTafsirLoading(false);
+      }
+    };
+    fetchTafsir();
+    return () => { cancelled = true; };
+  }, [surahId, ayahNumber, tafsirEnabled, tafsirEdition]);
 
   const handleToggleBookmark = () => {
     if (!data) return;
@@ -176,6 +208,50 @@ export default function AyahDetail() {
         </div>
         <div className="text-gray-700 dark:text-gray-300 mb-6">
           {data.translationText}
+        </div>
+
+        {/* Tafsir section */}
+        {tafsirEnabled && tafsirData[ayahNumber] && (
+          <div className="mb-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <button
+              onClick={() => setShowTafsir(!showTafsir)}
+              className="flex items-center gap-2 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors mb-3"
+              aria-expanded={showTafsir}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${showTafsir ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span className="font-medium">{getTafsirEdition(tafsirEdition)?.name || 'Tafsir'}</span>
+              {tafsirLoading && !tafsirData[ayahNumber] && (
+                <span className="text-gray-400 text-xs">Loading...</span>
+              )}
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showTafsir ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <div
+                className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50 dark:bg-gray-700/30 rounded-lg p-4 prose prose-sm dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: tafsirData[ayahNumber] }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tafsir selector */}
+        <div className="mb-6">
+          <TafsirSelector
+            enabled={tafsirEnabled}
+            edition={tafsirEdition}
+            onToggle={toggleTafsir}
+            onSelectEdition={selectEdition}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-3">

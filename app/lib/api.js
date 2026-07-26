@@ -153,3 +153,69 @@ export function getCacheStats() {
     keys: Array.from(cache.keys())
   };
 }
+
+// ── Tafsir ──────────────────────────────────────────────────────────────
+
+const QURAN_COM_BASE = '/api/quran-com';
+
+export const TAFSIR_EDITIONS = [
+  { id: 'ar.jalalayn', name: 'Tafsir al-Jalalayn', language: 'ar', source: 'alquran', description: 'Classical concise tafsir by al-Mahalli and al-Suyuti' },
+  { id: 'ar.muyassar', name: 'Tafsir al-Muyassar', language: 'ar', source: 'alquran', description: 'Simplified modern Arabic tafsir' },
+  { id: 'ar.qurtubi', name: 'Tafsir al-Qurtubi', language: 'ar', source: 'alquran', description: 'Comprehensive classical tafsir' },
+  { id: 'en.ibnKathir', name: 'Tafsir Ibn Kathir', language: 'en', source: 'qurancom', tafsirId: 169, description: 'Most popular English tafsir by Ibn Kathir' },
+  { id: 'en.maarif', name: "Ma'arif al-Qur'an", language: 'en', source: 'qurancom', tafsirId: 168, description: 'By Mufti Muhammad Shafi' },
+];
+
+export function getTafsirEdition(identifier) {
+  return TAFSIR_EDITIONS.find(e => e.id === identifier);
+}
+
+/**
+ * Fetch tafsir for an entire surah from AlQuran Cloud (Arabic tafsirs)
+ * Returns an object keyed by ayah number: { 1: tafsirHtml, 2: tafsirHtml, ... }
+ */
+export async function getAlQuranCloudTafsir(surahId, editionId) {
+  const url = `${API_BASE_URL}/surah/${surahId}/${editionId}`;
+  const data = await fetchWithCache(url);
+  const ayahs = data?.data?.ayahs || [];
+  const result = {};
+  ayahs.forEach(a => {
+    // Wrap plain text in <p> with RTL for proper rendering via dangerouslySetInnerHTML
+    const escaped = a.text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+    result[a.numberInSurah] = `<p lang="ar" dir="rtl" class="text-right font-quran text-lg leading-loose">${escaped}</p>`;
+  });
+  return result;
+}
+
+/**
+ * Fetch tafsir for an entire surah from Quran.com (English tafsirs)
+ * Returns an object keyed by ayah number: { 1: tafsirHtml, 2: tafsirHtml, ... }
+ */
+export async function getQuranComTafsir(surahId, tafsirId) {
+  const url = `${QURAN_COM_BASE}/tafsirs/${tafsirId}/by_chapter/${surahId}`;
+  const data = await fetchWithCache(url);
+  const tafsirs = data?.tafsirs || [];
+  const result = {};
+  tafsirs.forEach(t => {
+    const verseNum = Number(t.verse_key.split(':')[1]);
+    if (t.text && t.text.trim()) {
+      result[verseNum] = t.text;
+    }
+  });
+  return result;
+}
+
+/**
+ * Unified fetch: get tafsir map for any edition
+ */
+export async function getTafsirForSurah(surahId, editionId) {
+  const edition = getTafsirEdition(editionId);
+  if (!edition) return {};
+  if (edition.source === 'qurancom') {
+    return getQuranComTafsir(surahId, edition.tafsirId);
+  }
+  return getAlQuranCloudTafsir(surahId, editionId);
+}
