@@ -132,12 +132,12 @@ export default async function SurahPage({ params }) {
   };
 
   return (
-    <>
+    <div>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <SurahDetail initialData={initialData} />
-    </>
+    </div>
   );
 }
