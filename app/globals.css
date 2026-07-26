@@ -24,3 +24,9 @@ body {
     @apply outline-none ring-2 ring-teal-500 ring-offset-2;
   }
 }
+
+.tajweed-ham { color: #7B2D8B; }
+.tajweed-lam { color: #2E7D32; }
+.tajweed-ghunnah { color: #1565C0; }
+.tajweed-madd { color: #C62828; }
+.tajweed-pause { color: #00695C; }

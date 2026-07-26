@@ -2,11 +2,14 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getAyahMultipleEditions, getTafsirForSurah, getTafsirEdition } from '../../../lib/api';
+import { getAyahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed } from '../../../lib/api';
 import { useBookmarks } from '../../../hooks/useBookmarks';
 import { useAudioPlayer } from '../../../context/AudioPlayerContext';
 import { useTafsir } from '../../../hooks/useTafsir';
+import { useTajweed } from '../../../hooks/useTajweed';
+import { parseTajweedText } from '../../../lib/tajweed';
 import TafsirSelector from '../../../components/TafsirSelector';
+import TajweedToggle from '../../../components/TajweedToggle';
 
 export default function AyahDetail() {
   const { id, ayah } = useParams();
@@ -23,6 +26,9 @@ export default function AyahDetail() {
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { playAudio, currentAyah, isPlaying, togglePlayPause } = useAudioPlayer();
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
+  const { tajweedEnabled, toggleTajweed } = useTajweed();
+  const [tajweedData, setTajweedData] = useState({});
+  const [tajweedLoading, setTajweedLoading] = useState(false);
   const [tafsirData, setTafsirData] = useState({});
   const [tafsirLoading, setTafsirLoading] = useState(false);
   const [showTafsir, setShowTafsir] = useState(false);
@@ -95,6 +101,28 @@ export default function AyahDetail() {
     fetchTafsir();
     return () => { cancelled = true; };
   }, [surahId, ayahNumber, tafsirEnabled, tafsirEdition]);
+
+  // Fetch tajweed data when enabled
+  useEffect(() => {
+    if (!tajweedEnabled || !surahId) {
+      setTajweedData({});
+      return;
+    }
+    let cancelled = false;
+    const fetchTajweed = async () => {
+      setTajweedLoading(true);
+      try {
+        const data = await getSurahTajweed(surahId);
+        if (!cancelled) setTajweedData(data);
+      } catch {
+        if (!cancelled) setTajweedData({});
+      } finally {
+        if (!cancelled) setTajweedLoading(false);
+      }
+    };
+    fetchTajweed();
+    return () => { cancelled = true; };
+  }, [surahId, tajweedEnabled]);
 
   const handleToggleBookmark = () => {
     if (!data) return;
@@ -203,9 +231,14 @@ export default function AyahDetail() {
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-        <div lang="ar" dir="rtl" className="text-right text-3xl md:text-4xl font-quran leading-loose mb-6">
-          {data.text}
-        </div>
+        <div
+          lang="ar"
+          dir="rtl"
+          className="text-right text-3xl md:text-4xl font-quran leading-loose mb-6"
+          {...(tajweedEnabled && tajweedData[ayahNumber] ? {
+            dangerouslySetInnerHTML: { __html: parseTajweedText(tajweedData[ayahNumber]) }
+          } : { children: data.text })}
+        />
         <div className="text-gray-700 dark:text-gray-300 mb-6">
           {data.translationText}
         </div>
@@ -244,8 +277,10 @@ export default function AyahDetail() {
           </div>
         )}
 
-        {/* Tafsir selector */}
-        <div className="mb-6">
+        {/* Tajweed toggle */}
+        <div className="mb-6 flex items-center gap-3">
+          <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
+
           <TafsirSelector
             enabled={tafsirEnabled}
             edition={tafsirEdition}

@@ -41,6 +41,7 @@ const Header = memo(function Header() {
             <Link href="/juzs" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Juz</Link>
             <Link href="/search" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Search</Link>
             <Link href="/bookmarks" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Bookmarks</Link>
+            <Link href="/progress" className="hover:text-teal-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 rounded">Progress</Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
@@ -89,6 +90,7 @@ const Header = memo(function Header() {
             <Link href="/juzs" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Juz</Link>
             <Link href="/search" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Search</Link>
             <Link href="/bookmarks" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Bookmarks</Link>
+            <Link href="/progress" className="py-2 px-3 rounded hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-teal-600 transition-colors">Progress</Link>
           </nav>
         </div>
       </div>

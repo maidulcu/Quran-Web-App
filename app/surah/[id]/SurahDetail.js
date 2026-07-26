@@ -2,12 +2,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition } from '../../lib/api';
+import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed } from '../../lib/api';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import { useLastRead } from '../../hooks/useLastRead';
 import { useFont } from '../../hooks/useFont';
 import { useTafsir } from '../../hooks/useTafsir';
+import { useTajweed } from '../../hooks/useTajweed';
+import { useReadingProgress } from '../../hooks/useReadingProgress';
+import { parseTajweedText } from '../../lib/tajweed';
 import TafsirSelector from '../../components/TafsirSelector';
+import TajweedToggle from '../../components/TajweedToggle';
 
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
@@ -23,6 +27,10 @@ export default function SurahDetail({ initialData }) {
   const { saveLastRead } = useLastRead();
   const { fontClass, font, toggleFont } = useFont();
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
+  const { markAyahRead } = useReadingProgress();
+  const { tajweedEnabled, toggleTajweed } = useTajweed();
+  const [tajweedData, setTajweedData] = useState({});
+  const [tajweedLoading, setTajweedLoading] = useState(false);
   const [tafsirData, setTafsirData] = useState({});
   const [tafsirLoading, setTafsirLoading] = useState(false);
   const [expandedTafsir, setExpandedTafsir] = useState({});
@@ -35,7 +43,10 @@ export default function SurahDetail({ initialData }) {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const ayahNum = Number(entry.target.dataset.ayah);
-            if (ayahNum) saveLastRead(surah.number, ayahNum);
+            if (ayahNum) {
+              saveLastRead(surah.number, ayahNum);
+              markAyahRead(surah.number, ayahNum, surah.numberOfAyahs);
+            }
           }
         });
       },
@@ -47,7 +58,7 @@ export default function SurahDetail({ initialData }) {
     });
 
     return () => observer.disconnect();
-  }, [surah, saveLastRead]);
+  }, [surah, saveLastRead, markAyahRead]);
 
   useEffect(() => {
     if (initialData) return;
@@ -108,6 +119,28 @@ export default function SurahDetail({ initialData }) {
     fetchTafsir();
     return () => { cancelled = true; };
   }, [surah, tafsirEnabled, tafsirEdition]);
+
+  // Fetch tajweed data when enabled
+  useEffect(() => {
+    if (!tajweedEnabled || !surah) {
+      setTajweedData({});
+      return;
+    }
+    let cancelled = false;
+    const fetchTajweed = async () => {
+      setTajweedLoading(true);
+      try {
+        const data = await getSurahTajweed(surah.number);
+        if (!cancelled) setTajweedData(data);
+      } catch {
+        if (!cancelled) setTajweedData({});
+      } finally {
+        if (!cancelled) setTajweedLoading(false);
+      }
+    };
+    fetchTajweed();
+    return () => { cancelled = true; };
+  }, [surah, tajweedEnabled]);
 
   const handlePlayAyah = useCallback((ayah) => {
     playAudio({
@@ -234,6 +267,9 @@ export default function SurahDetail({ initialData }) {
             </button>
           </div>
 
+          {/* Tajweed toggle */}
+          <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
+
           {/* Tafsir selector */}
           <TafsirSelector
             enabled={tafsirEnabled}
@@ -313,9 +349,14 @@ export default function SurahDetail({ initialData }) {
                 </Link>
               </div>
             </div>
-            <div lang="ar" dir="rtl" className={`text-right text-2xl sm:text-3xl leading-loose mb-4 text-gray-800 dark:text-gray-100 ${fontClass}`}>
-              {ayah.text}
-            </div>
+            <div
+              lang="ar"
+              dir="rtl"
+              className={`text-right text-2xl sm:text-3xl leading-loose mb-4 text-gray-800 dark:text-gray-100 ${fontClass}`}
+              {...(tajweedEnabled && tajweedData[ayah.number] ? {
+                dangerouslySetInnerHTML: { __html: parseTajweedText(tajweedData[ayah.number]) }
+              } : { children: ayah.text })}
+            />
             <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               {ayah.translationText}
             </div>

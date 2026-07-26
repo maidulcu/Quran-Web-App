@@ -221,6 +221,24 @@ export async function getTafsirForSurah(surahId, editionId) {
   return getAlQuranCloudTafsir(surahId, editionId);
 }
 
+// ── Tajweed ─────────────────────────────────────────────────────────────
+
+/**
+ * Get tajweed-colored Arabic text for a surah
+ * @param {number} surahId - The surah number (1-114)
+ * @returns {Promise<Object>} Map of ayahNumber -> tajweed text with markup
+ */
+export async function getSurahTajweed(surahId) {
+  const url = `${API_BASE_URL}/surah/${surahId}/quran-tajweed`;
+  const data = await fetchWithCache(url);
+  const ayahs = data?.data?.ayahs || [];
+  const result = {};
+  ayahs.forEach(a => {
+    result[a.numberInSurah] = a.text;
+  });
+  return result;
+}
+
 // ── Mushaf Page ─────────────────────────────────────────────────────────
 
 /**

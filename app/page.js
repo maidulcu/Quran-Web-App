@@ -113,6 +113,14 @@ export default function Home() {
             </div>
             <p className="mt-2 text-gray-600 dark:text-gray-400">Page-by-page reading like a physical Quran.</p>
           </Link>
+
+          <Link href="/progress" className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all">
+            <div className="flex items-start justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Reading Progress</h2>
+              <span className="text-teal-600 group-hover:translate-x-0.5 transition-transform">→</span>
+            </div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">Track your Quran reading journey across all surahs.</p>
+          </Link>
         </div>
       </section>
 
