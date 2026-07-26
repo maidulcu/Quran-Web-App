@@ -221,6 +221,18 @@ export async function getTafsirForSurah(surahId, editionId) {
   return getAlQuranCloudTafsir(surahId, editionId);
 }
 
+// ── Translations ────────────────────────────────────────────────────────
+
+export const TRANSLATION_EDITIONS = [
+  { id: 'en.sahih', name: 'Saheeh International', shortName: 'Sahih Intl.' },
+  { id: 'en.yusufali', name: 'Abdullah Yusuf Ali', shortName: 'Yusuf Ali' },
+  { id: 'en.asad', name: 'Muhammad Asad', shortName: 'Asad' },
+  { id: 'en.pickthall', name: 'Marmaduke Pickthall', shortName: 'Pickthall' },
+  { id: 'en.hilali', name: 'Hilali & Khan', shortName: 'Hilali' },
+];
+
+export const DEFAULT_TRANSLATION = 'en.sahih';
+
 // ── Tajweed ─────────────────────────────────────────────────────────────
 
 /**

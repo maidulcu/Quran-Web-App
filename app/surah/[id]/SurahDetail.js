@@ -2,16 +2,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed } from '../../lib/api';
+import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed, DEFAULT_TRANSLATION } from '../../lib/api';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import { useLastRead } from '../../hooks/useLastRead';
 import { useFont } from '../../hooks/useFont';
 import { useTafsir } from '../../hooks/useTafsir';
 import { useTajweed } from '../../hooks/useTajweed';
+import { useTranslations } from '../../hooks/useTranslations';
 import { useReadingProgress } from '../../hooks/useReadingProgress';
 import { parseTajweedText } from '../../lib/tajweed';
 import TafsirSelector from '../../components/TafsirSelector';
 import TajweedToggle from '../../components/TajweedToggle';
+import TranslationSelector from '../../components/TranslationSelector';
 
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
@@ -29,6 +31,7 @@ export default function SurahDetail({ initialData }) {
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
   const { markAyahRead } = useReadingProgress();
   const { tajweedEnabled, toggleTajweed } = useTajweed();
+  const { selected: selectedTranslations, available: transAvailable, toggleTranslation } = useTranslations();
   const [tajweedData, setTajweedData] = useState({});
   const [tajweedLoading, setTajweedLoading] = useState(false);
   const [tafsirData, setTafsirData] = useState({});
@@ -61,28 +64,32 @@ export default function SurahDetail({ initialData }) {
   }, [surah, saveLastRead, markAyahRead]);
 
   useEffect(() => {
-    if (initialData) return;
     const controller = new AbortController();
     const fetchSurah = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getSurahMultipleEditions(id, ['ar.alafasy', 'en.sahih']);
+        const editions = ['ar.alafasy', ...selectedTranslations];
+        const data = await getSurahMultipleEditions(id, editions);
 
         if (!controller.signal.aborted) {
           const arabicData = data.data[0];
-          const translationData = data.data[1];
+          const transDataSets = data.data.slice(1);
 
           const combinedAyahs = arabicData.ayahs.map((ayah, index) => ({
             text: ayah.text,
-            translationText: translationData.ayahs[index]?.text || '',
+            translationText: transDataSets[0]?.ayahs[index]?.text || '',
+            otherTranslations: selectedTranslations.slice(1).map((edId, i) => ({
+              id: edId,
+              text: transDataSets[i + 1]?.ayahs[index]?.text || '',
+            })),
             number: ayah.numberInSurah,
             audio: ayah.audio || null,
           }));
 
           setSurah({
             ...arabicData,
-            ayahs: combinedAyahs
+            ayahs: combinedAyahs,
           });
           setLoading(false);
         }
@@ -94,9 +101,13 @@ export default function SurahDetail({ initialData }) {
       }
     };
 
+    if (initialData && selectedTranslations.length === 1 && selectedTranslations[0] === DEFAULT_TRANSLATION) {
+      setLoading(false);
+      return;
+    }
     if (id) fetchSurah();
     return () => controller.abort();
-  }, [id, initialData]);
+  }, [id, initialData, selectedTranslations]);
 
   // Fetch tafsir when enabled or edition changes
   useEffect(() => {
@@ -288,6 +299,13 @@ export default function SurahDetail({ initialData }) {
             </button>
           </div>
 
+          {/* Translation selector */}
+          <TranslationSelector
+            selected={selectedTranslations}
+            available={transAvailable}
+            onChange={toggleTranslation}
+          />
+
           {/* Tajweed toggle */}
           <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
 
@@ -385,6 +403,13 @@ export default function SurahDetail({ initialData }) {
             <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               {ayah.translationText}
             </div>
+
+            {ayah.otherTranslations?.map(t => t.text ? (
+              <div key={t.id} className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50">
+                <span className="text-xs font-medium text-gray-400">{transAvailable.find(e => e.id === t.id)?.shortName || t.id}</span>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mt-0.5">{t.text}</p>
+              </div>
+            ) : null)}
 
             {/* Tafsir section */}
             {tafsirEnabled && tafsirData[ayah.number] && (

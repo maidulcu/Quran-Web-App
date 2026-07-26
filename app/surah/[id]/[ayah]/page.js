@@ -2,14 +2,16 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { getAyahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed } from '../../../lib/api';
+import { getAyahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed, DEFAULT_TRANSLATION } from '../../../lib/api';
 import { useBookmarks } from '../../../hooks/useBookmarks';
 import { useAudioPlayer } from '../../../context/AudioPlayerContext';
 import { useTafsir } from '../../../hooks/useTafsir';
 import { useTajweed } from '../../../hooks/useTajweed';
+import { useTranslations } from '../../../hooks/useTranslations';
 import { parseTajweedText } from '../../../lib/tajweed';
 import TafsirSelector from '../../../components/TafsirSelector';
 import TajweedToggle from '../../../components/TajweedToggle';
+import TranslationSelector from '../../../components/TranslationSelector';
 
 export default function AyahDetail() {
   const { id, ayah } = useParams();
@@ -27,6 +29,7 @@ export default function AyahDetail() {
   const { playAudio, currentAyah, isPlaying, togglePlayPause } = useAudioPlayer();
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
   const { tajweedEnabled, toggleTajweed } = useTajweed();
+  const { selected: selectedTranslations, available: transAvailable, toggleTranslation } = useTranslations();
   const [tajweedData, setTajweedData] = useState({});
   const [tajweedLoading, setTajweedLoading] = useState(false);
   const [tafsirData, setTafsirData] = useState({});
@@ -40,7 +43,8 @@ export default function AyahDetail() {
       setLoading(true);
       setError(null);
       try {
-        const result = await getAyahMultipleEditions(surahId, ayahNumber, ['ar.alafasy', 'en.sahih']);
+        const editions = ['ar.alafasy', ...selectedTranslations];
+        const result = await getAyahMultipleEditions(surahId, ayahNumber, editions);
 
         if (controller.signal.aborted) return;
         if (result.status !== 'OK') {
@@ -48,7 +52,7 @@ export default function AyahDetail() {
         }
 
         const ar = result.data[0];
-        const en = result.data[1];
+        const transDataSets = result.data.slice(1);
 
         const combined = {
           surahNumber: ar.surah?.number,
@@ -56,7 +60,11 @@ export default function AyahDetail() {
           surahArabicName: ar.surah?.name,
           number: ar.numberInSurah,
           text: ar.text,
-          translationText: en.text,
+          translationText: transDataSets[0]?.text || '',
+          otherTranslations: selectedTranslations.slice(1).map((edId, i) => ({
+            id: edId,
+            text: transDataSets[i + 1]?.text || '',
+          })),
           audio: ar.audio || null,
           revelationType: ar.surah?.revelationType,
           numberOfAyahs: ar.surah?.numberOfAyahs,
@@ -74,7 +82,7 @@ export default function AyahDetail() {
     };
     load();
     return () => controller.abort();
-  }, [surahId, ayahNumber]);
+  }, [surahId, ayahNumber, selectedTranslations]);
 
   // Fetch tafsir when enabled
   useEffect(() => {
@@ -247,6 +255,13 @@ export default function AyahDetail() {
           {data.translationText}
         </div>
 
+        {data.otherTranslations?.map(t => t.text ? (
+          <div key={t.id} className="mb-4 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+            <span className="text-xs font-medium text-gray-400">{transAvailable.find(e => e.id === t.id)?.shortName || t.id}</span>
+            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mt-0.5">{t.text}</p>
+          </div>
+        ) : null)}
+
         {/* Tafsir section */}
         {tafsirEnabled && tafsirData[ayahNumber] && (
           <div className="mb-6 border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -282,7 +297,13 @@ export default function AyahDetail() {
         )}
 
         {/* Tajweed toggle */}
-        <div className="mb-6 flex items-center gap-3">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <TranslationSelector
+            selected={selectedTranslations}
+            available={transAvailable}
+            onChange={toggleTranslation}
+          />
+
           <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
 
           <TafsirSelector
