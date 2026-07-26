@@ -1,7 +1,6 @@
 import { getSurahMultipleEditions } from '../../lib/api';
 import { getSurahInfo } from '../../lib/surahInfo';
 import SurahDetail from './SurahDetail';
-import JsonLd from '../../components/JsonLd';
 
 const SURAH_NAMES = {
   1: 'Al-Fatihah', 2: 'Al-Baqarah', 3: 'Ali Imran', 4: 'An-Nisa', 5: 'Al-Maidah',
@@ -65,6 +64,27 @@ export async function generateMetadata({ params }) {
     ? `${info.summary.substring(0, 155)}...`
     : `Read and listen to Surah ${name} (${translation}). Arabic text with Sahih International English translation and audio recitation. Full chapter with all ${id === 2 ? '286' : ''} verses.`;
 
+  const schema = {
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    name: `Surah ${name} (${translation})`,
+    alternateName: name,
+    description: info.summary || `Full text of Surah ${name} with English translation from the Holy Quran.`,
+    numberOfPages: 0,
+    bookFormat: 'https://schema.org/EBook',
+    author: {
+      '@type': 'Organization',
+      name: 'Holy Quran',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Quran Web App',
+      url: 'https://quran.learntrueislam.com',
+    },
+    inLanguage: ['ar', 'en'],
+    url: `https://quran.learntrueislam.com/surah/${id}`,
+  };
+
   return {
     title: `Surah ${name} (${translation}) - Full Arabic Text & English Translation | Quran Web App`,
     description,
@@ -79,6 +99,9 @@ export async function generateMetadata({ params }) {
       card: 'summary',
       title: `Surah ${name} (${translation}) - Full Arabic Text & English Translation`,
       description,
+    },
+    other: {
+      'ld+json': JSON.stringify(schema),
     },
   };
 }
@@ -107,35 +130,5 @@ export default async function SurahPage({ params }) {
     // Client component will handle the error state
   }
 
-  const name = SURAH_NAMES[id] || `Surah ${id}`;
-  const translation = SURAH_TRANSLATIONS[id] || '';
-  const info = getSurahInfo(id);
-
-  const schema = {
-    '@context': 'https://schema.org',
-    '@type': 'Book',
-    name: `Surah ${name} (${translation})`,
-    alternateName: name,
-    description: info.summary || `Full text of Surah ${name} with English translation from the Holy Quran.`,
-    numberOfPages: initialData?.numberOfAyahs || 0,
-    bookFormat: 'https://schema.org/EBook',
-    author: {
-      '@type': 'Organization',
-      name: 'Holy Quran',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Quran Web App',
-      url: 'https://quran.learntrueislam.com',
-    },
-    inLanguage: ['ar', 'en'],
-    url: `https://quran.learntrueislam.com/surah/${id}`,
-  };
-
-  return (
-    <div>
-      <JsonLd data={schema} />
-      <SurahDetail initialData={initialData} />
-    </div>
-  );
+  return <SurahDetail initialData={initialData} />;
 }
