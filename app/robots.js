@@ -7,6 +7,6 @@ export default function robots() {
         disallow: ['/bookmarks'],
       },
     ],
-    sitemap: 'https://quran-web-app.vercel.app/sitemap.xml',
+    sitemap: 'https://quran.learntrueislam.com/sitemap.xml',
   };
 }
