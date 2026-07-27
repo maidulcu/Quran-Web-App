@@ -233,6 +233,27 @@ export const TRANSLATION_EDITIONS = [
 
 export const DEFAULT_TRANSLATION = 'en.sahih';
 
+// ── Word-by-Word Translation ────────────────────────────────────────────
+
+/**
+ * Fetch word-by-word translations for an ayah from Quran.com
+ * @param {number} surahId - Surah number
+ * @param {number} ayahNumber - Ayah number
+ * @returns {Promise<Array>} Array of word objects with text, translation, transliteration
+ */
+export async function getWordByWord(surahId, ayahNumber) {
+  const url = `${QURAN_COM_BASE}/verses/by_key/${surahId}:${ayahNumber}?words=true&translation_id=131`;
+  const data = await fetchWithCache(url);
+  const words = data?.verse?.words || [];
+  return words
+    .filter(w => w.char_type_name === 'word')
+    .map(w => ({
+      text: w.text,
+      translation: w.translation?.text?.trim() || '',
+      transliteration: w.transliteration?.text?.trim() || '',
+    }));
+}
+
 // ── Tajweed ─────────────────────────────────────────────────────────────
 
 /**

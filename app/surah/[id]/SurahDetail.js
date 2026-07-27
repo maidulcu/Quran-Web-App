@@ -12,12 +12,46 @@ import { useTranslations } from '../../hooks/useTranslations';
 import { useReadingProgress } from '../../hooks/useReadingProgress';
 import { parseTajweedText } from '../../lib/tajweed';
 import { getSurahInfo } from '../../lib/surahInfo';
+import { useWordByWord } from '../../hooks/useWordByWord';
 import TafsirSelector from '../../components/TafsirSelector';
 import TajweedToggle from '../../components/TajweedToggle';
 import TranslationSelector from '../../components/TranslationSelector';
 
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
+
+function WordByWordLine({ surahNumber, ayahNumber, fetchWords }) {
+  const [words, setWords] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let cancel = false;
+    fetchWords(surahNumber, ayahNumber).then(w => {
+      if (!cancel && w) setWords(w);
+      if (!cancel) setLoaded(true);
+    });
+    return () => { cancel = true; };
+  }, [surahNumber, ayahNumber, fetchWords]);
+
+  if (!loaded || words.length === 0) return null;
+
+  return (
+    <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700/50">
+      <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
+        {words.map((word, i) => (
+          <span key={i} className="text-center group cursor-default">
+            <span lang="ar" dir="rtl" className="block text-sm font-quran text-gray-800 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+              {word.text}
+            </span>
+            <span className="block text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
+              {word.translation}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SurahDetail({ initialData }) {
   const { id } = useParams();
@@ -32,6 +66,7 @@ export default function SurahDetail({ initialData }) {
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
   const { markAyahRead } = useReadingProgress();
   const { tajweedEnabled, toggleTajweed } = useTajweed();
+  const { enabled: wbwEnabled, toggle: toggleWbw, fetchWords } = useWordByWord();
   const { selected: selectedTranslations, available: transAvailable, toggleTranslation } = useTranslations();
   const [tajweedData, setTajweedData] = useState({});
   const [tajweedLoading, setTajweedLoading] = useState(false);
@@ -314,6 +349,19 @@ export default function SurahDetail({ initialData }) {
           {/* Tajweed toggle */}
           <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
 
+          {/* Word-by-word toggle */}
+          <button
+            onClick={toggleWbw}
+            className={`text-xs px-3 py-1 rounded-full transition-colors ${
+              wbwEnabled
+                ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-200 ring-1 ring-orange-300 dark:ring-orange-700'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+            aria-label={wbwEnabled ? 'Disable word-by-word' : 'Enable word-by-word'}
+          >
+            {wbwEnabled ? 'WBW On' : 'Word-by-Word'}
+          </button>
+
           {/* Tafsir selector */}
           <TafsirSelector
             enabled={tafsirEnabled}
@@ -485,6 +533,15 @@ export default function SurahDetail({ initialData }) {
             <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               {ayah.translationText}
             </div>
+
+            {/* Word-by-word translations */}
+            {wbwEnabled && (
+              <WordByWordLine
+                surahNumber={surah.number}
+                ayahNumber={ayah.number}
+                fetchWords={fetchWords}
+              />
+            )}
 
             {ayah.otherTranslations?.map(t => t.text ? (
               <div key={t.id} className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50">
