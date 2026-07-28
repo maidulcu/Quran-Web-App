@@ -94,6 +94,7 @@ export default function Home() {
             { href: '/bookmarks', title: 'Bookmarks', desc: 'Save and revisit your favorite Ayahs.' },
             { href: '/mushaf/1', title: 'Mushaf View', desc: 'Page-by-page reading like a physical Quran.' },
             { href: '/progress', title: 'Reading Progress', desc: 'Track your Quran reading journey across all surahs.' },
+            { href: '/notes', title: 'My Notes', desc: 'Personal reflections and notes on verses.' },
           ].map((card, i) => (
             <Link
               key={card.href}

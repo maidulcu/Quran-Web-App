@@ -14,7 +14,9 @@ import { useReadingProgress } from '../../hooks/useReadingProgress';
 import { parseTajweedText } from '../../lib/tajweed';
 import { getSurahInfo } from '../../lib/surahInfo';
 import { useWordByWord } from '../../hooks/useWordByWord';
+import { useNotes } from '../../hooks/useNotes';
 import FontSizeSlider from '../../components/FontSizeSlider';
+import AyahNote from '../../components/AyahNote';
 import TafsirSelector from '../../components/TafsirSelector';
 import TajweedToggle from '../../components/TajweedToggle';
 import TranslationSelector from '../../components/TranslationSelector';
@@ -70,6 +72,7 @@ export default function SurahDetail({ initialData }) {
   const { markAyahRead } = useReadingProgress();
   const { tajweedEnabled, toggleTajweed } = useTajweed();
   const { enabled: wbwEnabled, toggle: toggleWbw, fetchWords } = useWordByWord();
+  const { getNote, saveNote, deleteNote } = useNotes();
   const { selected: selectedTranslations, available: transAvailable, toggleTranslation } = useTranslations();
   const [tajweedData, setTajweedData] = useState({});
   const [tajweedLoading, setTajweedLoading] = useState(false);
@@ -534,6 +537,22 @@ export default function SurahDetail({ initialData }) {
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 </button>
+                {/* Note button */}
+                <button
+                  onClick={() => {
+                    const el = document.getElementById(`note-${ayah.number}`);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  className={`p-1.5 rounded-full transition-colors ${
+                    getNote(surah.number, ayah.number)
+                      ? 'text-yellow-500 hover:text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
+                      : 'text-gray-400 hover:text-teal-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  aria-label={`Note for ayah ${ayah.number}`}
+                  title="Note"
+                >
+                  <svg className="w-4 h-4" fill={getNote(surah.number, ayah.number) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
               </div>
             </div>
             <div
@@ -597,6 +616,15 @@ export default function SurahDetail({ initialData }) {
                 </div>
               </div>
             )}
+
+            {/* Note section */}
+            <div id={`note-${ayah.number}`}>
+              <AyahNote
+                note={getNote(surah.number, ayah.number)}
+                onSave={(text) => saveNote(surah.number, ayah.number, text)}
+                onDelete={() => deleteNote(surah.number, ayah.number)}
+              />
+            </div>
           </article>
         ))}
       </div>
