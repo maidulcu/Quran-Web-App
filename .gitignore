@@ -17,3 +17,6 @@ out/
 .vscode/
 .idea/
 .DS_Store
+
+# Deploy (contains server info)
+deploy.sh
