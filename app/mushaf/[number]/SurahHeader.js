@@ -11,7 +11,7 @@ export default function SurahHeader({ surah, fontClass, isFirst }) {
       </div>
 
       {/* Surah name in Arabic */}
-      <div lang="ar" className={`text-2xl text-teal-800 dark:text-teal-200 mb-1 ${fontClass}`}>
+      <div lang="ar" className={`text-teal-800 dark:text-teal-200 mb-1 ${fontClass} quran-header`}>
         {surah.name}
       </div>
 

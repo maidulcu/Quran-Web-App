@@ -31,14 +31,14 @@ export default function PageCanvas({ pageData, fontClass, currentAyah, isPlaying
           {/* Bismillah */}
           {gi === 0 && !SKIP_BISMILLAH_SURAH.includes(group.surah.number) && group.surah.number !== 1 && (
             <div className="text-center mb-6">
-              <p lang="ar" dir="rtl" className={`text-2xl text-gray-800 dark:text-gray-100 leading-loose ${fontClass}`}>
+              <p lang="ar" dir="rtl" className={`text-gray-800 dark:text-gray-100 ${fontClass} quran-text text-center`}>
                 {BISMILLAH}
               </p>
             </div>
           )}
 
           {/* Continuous Arabic text */}
-          <div lang="ar" dir="rtl" className={`text-right text-2xl sm:text-3xl leading-[2.2] sm:leading-[2.4] text-gray-800 dark:text-gray-100 ${fontClass}`}>
+          <div lang="ar" dir="rtl" className={`text-right text-gray-800 dark:text-gray-100 ${fontClass} quran-text`} style={{ lineHeight: '2.3' }}>
             {group.ayahs.map((ayah, i) => {
               const isActive = currentAyah?.surahName === ayah.surah?.englishName && currentAyah?.number === ayah.numberInSurah;
               return (

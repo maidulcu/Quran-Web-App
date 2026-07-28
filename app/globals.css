@@ -44,3 +44,15 @@ body {
 .tajweed-ghunnah { color: #1565C0; }
 .tajweed-madd { color: #C62828; }
 .tajweed-pause { color: #00695C; }
+
+.font-size-s .quran-text { font-size: 1.5rem; line-height: 2.5; }
+.font-size-m .quran-text { font-size: 1.75rem; line-height: 2.75; }
+.font-size-l .quran-text { font-size: 2rem; line-height: 3; }
+.font-size-xl .quran-text { font-size: 2.25rem; line-height: 3.25; }
+.font-size-xxl .quran-text { font-size: 2.5rem; line-height: 3.5; }
+
+.font-size-s .quran-header { font-size: 2rem; }
+.font-size-m .quran-header { font-size: 2.25rem; }
+.font-size-l .quran-header { font-size: 2.5rem; }
+.font-size-xl .quran-header { font-size: 2.75rem; }
+.font-size-xxl .quran-header { font-size: 3rem; }

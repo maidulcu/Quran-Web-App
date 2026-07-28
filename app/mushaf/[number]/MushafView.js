@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getPage } from '../../lib/api';
 import { useFont } from '../../hooks/useFont';
+import { useFontSize } from '../../hooks/useFontSize';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import { useLastReadPage } from '../../hooks/useLastReadPage';
 import PageCanvas from './PageCanvas';
@@ -13,6 +14,7 @@ const TOTAL_PAGES = 604;
 export default function MushafView({ initialData, pageNumber }) {
   const router = useRouter();
   const { fontClass } = useFont();
+  useFontSize(); // activates font-size CSS class on <html>
   const { playAudio, currentAyah, isPlaying } = useAudioPlayer();
   const { saveLastReadPage } = useLastReadPage();
 

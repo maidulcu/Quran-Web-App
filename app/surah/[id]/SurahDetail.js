@@ -6,6 +6,7 @@ import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurah
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
 import { useLastRead } from '../../hooks/useLastRead';
 import { useFont } from '../../hooks/useFont';
+import { useFontSize } from '../../hooks/useFontSize';
 import { useTafsir } from '../../hooks/useTafsir';
 import { useTajweed } from '../../hooks/useTajweed';
 import { useTranslations } from '../../hooks/useTranslations';
@@ -13,6 +14,7 @@ import { useReadingProgress } from '../../hooks/useReadingProgress';
 import { parseTajweedText } from '../../lib/tajweed';
 import { getSurahInfo } from '../../lib/surahInfo';
 import { useWordByWord } from '../../hooks/useWordByWord';
+import FontSizeSlider from '../../components/FontSizeSlider';
 import TafsirSelector from '../../components/TafsirSelector';
 import TajweedToggle from '../../components/TajweedToggle';
 import TranslationSelector from '../../components/TranslationSelector';
@@ -63,6 +65,7 @@ export default function SurahDetail({ initialData }) {
   const { playAudio, currentAyah, isPlaying, setQueue } = useAudioPlayer();
   const { saveLastRead } = useLastRead();
   const { fontClass, font, toggleFont } = useFont();
+  const { level: fontSizeLevel, label: fontSizeLabel } = useFontSize();
   const { tafsirEnabled, tafsirEdition, toggleTafsir, selectEdition } = useTafsir();
   const { markAyahRead } = useReadingProgress();
   const { tajweedEnabled, toggleTajweed } = useTajweed();
@@ -310,7 +313,7 @@ export default function SurahDetail({ initialData }) {
 
       {/* Surah Info Header */}
       <div className="text-center mb-8 bg-gradient-to-b from-teal-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-        <div lang="ar" className={`text-4xl mb-3 text-teal-800 dark:text-teal-200 ${fontClass}`}>
+        <div lang="ar" className={`mb-3 text-teal-800 dark:text-teal-200 ${fontClass} quran-header`}>
           {surah.name}
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">
@@ -369,13 +372,16 @@ export default function SurahDetail({ initialData }) {
             onToggle={toggleTafsir}
             onSelectEdition={selectEdition}
           />
+
+          {/* Font size slider */}
+          <FontSizeSlider />
         </div>
       </div>
 
       {/* Bismillah */}
       {showBismillah && (
         <div className="text-center mb-8 py-6">
-          <p lang="ar" className={`text-3xl text-gray-800 dark:text-gray-100 leading-loose ${fontClass}`}>
+          <p lang="ar" className={`text-gray-800 dark:text-gray-100 ${fontClass} quran-text text-center`}>
             {BISMILLAH}
           </p>
         </div>
@@ -533,7 +539,7 @@ export default function SurahDetail({ initialData }) {
             <div
               lang="ar"
               dir="rtl"
-              className={`text-right text-2xl sm:text-3xl leading-loose mb-4 text-gray-800 dark:text-gray-100 ${fontClass}`}
+              className={`text-right mb-4 text-gray-800 dark:text-gray-100 ${fontClass} quran-text`}
               {...(tajweedEnabled && tajweedData[ayah.number] ? {
                 dangerouslySetInnerHTML: { __html: parseTajweedText(tajweedData[ayah.number]) }
               } : { children: ayah.text })}
