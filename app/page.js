@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLastRead } from './hooks/useLastRead';
+import VerseOfDay from './components/VerseOfDay';
 
 export default function Home() {
   const router = useRouter();
@@ -78,6 +79,11 @@ export default function Home() {
           </Link>
         </section>
       )}
+
+      {/* Verse of the Day */}
+      <section className="container mx-auto px-4 pb-8">
+        <VerseOfDay />
+      </section>
 
       {/* Quick actions */}
       <section className="container mx-auto px-4 pb-12">
