@@ -168,7 +168,7 @@ export default function ProgressPage() {
           {displaySurahs.map(surah => (
             <Link
               key={surah.number}
-              href={surah.started ? `/surah/${surah.number}/${surah.read}` : `/surah/${surah.number}`}
+              href={surah.started ? `/surah/${surah.number}` : `/surah/${surah.number}`}
               className="block bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md hover:ring-teal-200/60 dark:hover:ring-teal-700/40 transition-all"
             >
               <div className="flex items-center gap-4">

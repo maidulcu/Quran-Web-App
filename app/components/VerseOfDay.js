@@ -44,7 +44,7 @@ export default function VerseOfDay() {
         </span>
       </div>
 
-      <Link href={`/surah/${verse.surahNumber}/${verse.ayahNumber}`} className="block group">
+      <Link href={`/surah/${verse.surahNumber}`} className="block group">
         <div lang="ar" dir="rtl" className="text-2xl sm:text-3xl font-quran text-gray-800 dark:text-gray-100 leading-loose mb-4 text-center group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors">
           {arabic}
         </div>

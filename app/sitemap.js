@@ -58,18 +58,6 @@ export default function sitemap() {
     priority: 0.8,
   }));
 
-  const ayahPages = [];
-  Object.entries(AYAH_COUNTS).forEach(([surahId, count]) => {
-    for (let i = 1; i <= count; i++) {
-      ayahPages.push({
-        url: `${BASE_URL}/surah/${surahId}/${i}`,
-        lastModified: now,
-        changeFrequency: 'yearly',
-        priority: 0.3,
-      });
-    }
-  });
-
   const mushafPages = [];
   for (let i = 1; i <= 604; i++) {
     mushafPages.push({
@@ -80,5 +68,5 @@ export default function sitemap() {
     });
   }
 
-  return [...staticPages, ...surahPages, ...ayahPages, ...mushafPages];
+  return [...staticPages, ...surahPages, ...mushafPages];
 }
