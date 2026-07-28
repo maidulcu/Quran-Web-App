@@ -30,6 +30,7 @@ A feature-rich, production-quality Quran web application built with **Next.js 14
 
 ### Personalization
 - Bookmarks — save and revisit favorite verses
+- Note-taking — write personal notes on any ayah, view all at /notes
 - Reading progress — tracks which ayahs you've read per surah
 - Reading progress dashboard — overall stats, per-surah bars, sort/filter
 - Last read — resume where you left off
