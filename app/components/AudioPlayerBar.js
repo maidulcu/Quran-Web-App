@@ -162,7 +162,7 @@ export default function AudioPlayerBar() {
         {/* Play/Pause button */}
         <button
           onClick={togglePlayPause}
-          className="bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
+          className={`bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-teal-700 transition-colors flex-shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 ${isPlaying ? 'animate-pulse-subtle' : ''}`}
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
