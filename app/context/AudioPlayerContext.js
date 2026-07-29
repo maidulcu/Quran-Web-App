@@ -62,7 +62,7 @@ export function AudioPlayerProvider({ children }) {
       if (mode === 'one') {
         // Repeat current ayah indefinitely
         audio.currentTime = 0;
-        audio.play().catch(() => {});
+        audio.play().then(() => setIsPlaying(true)).catch(() => {});
         return;
       }
 
@@ -71,7 +71,7 @@ export function AudioPlayerProvider({ children }) {
         repeatCountRef.current.count++;
         if (repeatCountRef.current.count < max) {
           audio.currentTime = 0;
-          audio.play().catch(() => {});
+          audio.play().then(() => setIsPlaying(true)).catch(() => {});
           return;
         }
         // Reset count and advance
@@ -121,13 +121,13 @@ export function AudioPlayerProvider({ children }) {
   const togglePlayPause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying) {
+    if (!audio.paused) {
       audio.pause();
       setIsPlaying(false);
     } else if (currentAyah?.audio) {
       audio.play().then(() => setIsPlaying(true)).catch(() => {});
     }
-  }, [isPlaying, currentAyah]);
+  }, [currentAyah]);
 
   const stopAudio = useCallback(() => {
     const audio = audioRef.current;
