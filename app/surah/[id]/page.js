@@ -69,6 +69,12 @@ const AYAH_COUNTS = {
   111:5, 112:4, 113:5, 114:6
 };
 
+export async function generateStaticParams() {
+  return Array.from({ length: 114 }, (_, i) => ({
+    id: String(i + 1),
+  }));
+}
+
 export async function generateMetadata({ params }) {
   const id = Number(params.id);
   const name = SURAH_NAMES[id] || `Surah ${id}`;

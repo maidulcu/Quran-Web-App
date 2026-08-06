@@ -13,6 +13,11 @@ yarn-error.log*
 .next/
 out/
 
+# Capacitor - generated native project (rebuildable via `npx cap sync`)
+android/
+ios/
+.capacitor/
+
 # Editor directories and files
 .vscode/
 .idea/

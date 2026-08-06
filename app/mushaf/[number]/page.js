@@ -3,6 +3,12 @@ import MushafView from './MushafView';
 
 const TOTAL_PAGES = 604;
 
+export async function generateStaticParams() {
+  return Array.from({ length: TOTAL_PAGES }, (_, i) => ({
+    number: String(i + 1),
+  }));
+}
+
 export async function generateMetadata({ params }) {
   const number = Math.max(1, Math.min(TOTAL_PAGES, Number(params.number) || 1));
 

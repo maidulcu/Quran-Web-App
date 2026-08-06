@@ -3,7 +3,7 @@
  * Provides caching and error handling for all API requests
  */
 
-const API_BASE_URL = '/api/quran';
+const API_BASE_URL = 'https://api.alquran.cloud/v1';
 const EXTERNAL_API_BASE = 'https://api.alquran.cloud/v1';
 
 // Simple in-memory cache
@@ -157,7 +157,7 @@ export function getCacheStats() {
 
 // ── Tafsir ──────────────────────────────────────────────────────────────
 
-const QURAN_COM_BASE = '/api/quran-com';
+const QURAN_COM_BASE = 'https://api.quran.com/api/v4';
 
 export const TAFSIR_EDITIONS = [
   { id: 'ar.jalalayn', name: 'Tafsir al-Jalalayn', language: 'ar', source: 'alquran', description: 'Classical concise tafsir by al-Mahalli and al-Suyuti' },
