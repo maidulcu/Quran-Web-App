@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { storage } from '../lib/storage';
 
 const FONT_KEY = 'quranFont';
 
@@ -7,18 +8,15 @@ export function useFont() {
   const [font, setFont] = useState('Uthmanic');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(FONT_KEY);
-      if (stored === 'IndoPak' || stored === 'Uthmanic') {
-        setFont(stored);
-      }
-    } catch {}
+    storage.get(FONT_KEY).then(stored => {
+      if (stored === 'IndoPak' || stored === 'Uthmanic') setFont(stored);
+    }).catch(() => {});
   }, []);
 
   const toggleFont = useCallback(() => {
     setFont(prev => {
       const next = prev === 'Uthmanic' ? 'IndoPak' : 'Uthmanic';
-      localStorage.setItem(FONT_KEY, next);
+      storage.set(FONT_KEY, next).catch(() => {});
       return next;
     });
   }, []);

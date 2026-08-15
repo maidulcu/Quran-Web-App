@@ -1,20 +1,19 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { storage } from '../lib/storage';
 
 const SIZE_KEY = 'quranFontSize';
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-const DEFAULT = 1; // M
+const DEFAULT = 1;
 
 export function useFontSize() {
   const [level, setLevel] = useState(DEFAULT);
 
   useEffect(() => {
-    try {
-      const stored = parseInt(localStorage.getItem(SIZE_KEY), 10);
-      if (!isNaN(stored) && stored >= 0 && stored < SIZES.length) {
-        setLevel(stored);
-      }
-    } catch {}
+    storage.get(SIZE_KEY).then(stored => {
+      const parsed = parseInt(stored, 10);
+      if (!isNaN(parsed) && parsed >= 0 && parsed < SIZES.length) setLevel(parsed);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -28,7 +27,7 @@ export function useFontSize() {
   const increase = useCallback(() => {
     setLevel(prev => {
       const next = Math.min(prev + 1, SIZES.length - 1);
-      localStorage.setItem(SIZE_KEY, next);
+      storage.set(SIZE_KEY, String(next)).catch(() => {});
       return next;
     });
   }, []);
@@ -36,17 +35,10 @@ export function useFontSize() {
   const decrease = useCallback(() => {
     setLevel(prev => {
       const next = Math.max(prev - 1, 0);
-      localStorage.setItem(SIZE_KEY, next);
+      storage.set(SIZE_KEY, String(next)).catch(() => {});
       return next;
     });
   }, []);
 
-  return {
-    level,
-    label: SIZES[level],
-    increase,
-    decrease,
-    canIncrease: level < SIZES.length - 1,
-    canDecrease: level > 0,
-  };
+  return { level, label: SIZES[level], increase, decrease, canIncrease: level < SIZES.length - 1, canDecrease: level > 0 };
 }

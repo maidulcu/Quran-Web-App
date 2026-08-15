@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useCallback, useEffect, memo } from 'react';
 import { usePathname } from 'next/navigation';
+import { storage } from '../lib/storage';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home' },
@@ -24,6 +25,12 @@ const Header = memo(function Header() {
   const pathname = usePathname();
 
   useEffect(() => {
+    storage.get('theme').then(stored => {
+      setDark(stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches));
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
   }, [dark]);
 
@@ -36,7 +43,7 @@ const Header = memo(function Header() {
   const toggleTheme = useCallback(() => {
     setDark(prev => {
       const next = !prev;
-      localStorage.setItem('theme', next ? 'dark' : 'light');
+      storage.set('theme', next ? 'dark' : 'light').catch(() => {});
       return next;
     });
   }, []);

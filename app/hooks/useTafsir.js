@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { storage } from '../lib/storage';
 
 const TASFSIR_KEY = 'tafsirSettings';
 const DEFAULT_EDITION = 'ar.jalalayn';
@@ -10,21 +11,17 @@ export function useTafsir() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(TASFSIR_KEY);
+    storage.get(TASFSIR_KEY).then(stored => {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (typeof parsed.enabled === 'boolean') setTafsirEnabled(parsed.enabled);
         if (typeof parsed.edition === 'string') setTafsirEdition(parsed.edition);
       }
-    } catch {}
-    setIsLoading(false);
+    }).catch(() => {}).finally(() => setIsLoading(false));
   }, []);
 
   const save = useCallback((enabled, edition) => {
-    try {
-      localStorage.setItem(TASFSIR_KEY, JSON.stringify({ enabled, edition }));
-    } catch {}
+    storage.set(TASFSIR_KEY, JSON.stringify({ enabled, edition })).catch(() => {});
   }, []);
 
   const toggleTafsir = useCallback(() => {
@@ -40,11 +37,5 @@ export function useTafsir() {
     save(tafsirEnabled, edition);
   }, [tafsirEnabled, save]);
 
-  return {
-    tafsirEnabled,
-    tafsirEdition,
-    isLoading,
-    toggleTafsir,
-    selectEdition,
-  };
+  return { tafsirEnabled, tafsirEdition, isLoading, toggleTafsir, selectEdition };
 }

@@ -10,10 +10,16 @@
     "cap:open": "npx cap open android",
     "cap:build": "npx cap build android",
     "build:offline-data": "node scripts/build-offline-data.mjs",
+    "build:android": "./scripts/build-android.sh debug",
+    "build:android:release": "./scripts/build-android.sh release",
     "lint": "next lint"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.0",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3",
     "autoprefixer": "10.4.16",
     "next": "14.0.4",
     "postcss": "8.4.32",

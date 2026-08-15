@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { storage } from '../lib/storage';
 
 const NOTES_KEY = 'quranNotes';
 
@@ -8,17 +9,13 @@ export function useNotes() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(NOTES_KEY);
+    storage.get(NOTES_KEY).then(saved => {
       if (saved) setNotes(JSON.parse(saved));
-    } catch {}
-    setLoaded(true);
+    }).catch(() => {}).finally(() => setLoaded(true));
   }, []);
 
   const persist = useCallback((next) => {
-    try {
-      localStorage.setItem(NOTES_KEY, JSON.stringify(next));
-    } catch {}
+    storage.set(NOTES_KEY, JSON.stringify(next)).catch(() => {});
   }, []);
 
   const getNote = useCallback((surah, ayah) => {
@@ -30,14 +27,7 @@ export function useNotes() {
     const now = Date.now();
     setNotes(prev => {
       const existing = prev[key];
-      const next = {
-        ...prev,
-        [key]: {
-          text,
-          createdAt: existing?.createdAt || now,
-          updatedAt: now,
-        },
-      };
+      const next = { ...prev, [key]: { text, createdAt: existing?.createdAt || now, updatedAt: now } };
       persist(next);
       return next;
     });
@@ -60,7 +50,5 @@ export function useNotes() {
     })
     .sort((a, b) => b.updatedAt - a.updatedAt);
 
-  const count = allNotes.length;
-
-  return { notes, loaded, getNote, saveNote, deleteNote, allNotes, count };
+  return { notes, loaded, getNote, saveNote, deleteNote, allNotes, count: allNotes.length };
 }

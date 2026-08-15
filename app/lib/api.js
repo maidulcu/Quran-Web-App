@@ -287,11 +287,21 @@ export async function getPage(pageNumber) {
       const res = await fetch(bundledPath);
       if (res.ok) return await res.json();
     } catch {
+      /* fall through to cache/network */
+    }
+  }
+
+  // 2. Check IndexedDB cache for previously fetched page.
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = await idbGet(arabicUrl);
+      if (cached && cached.data) return cached.data;
+    } catch {
       /* fall through to network */
     }
   }
 
-  // 2. Network merge + cache.
+  // 3. Network merge + cache.
   const [arabicRes, translationRes] = await Promise.all([
     fetch(arabicUrl),
     fetch(translationUrl),

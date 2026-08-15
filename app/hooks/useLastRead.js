@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { storage } from '../lib/storage';
 
 const LAST_READ_KEY = 'lastReadAyah';
 
@@ -33,12 +34,9 @@ export function useLastRead() {
   const [lastRead, setLastRead] = useState(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LAST_READ_KEY);
-      if (saved) {
-        setLastRead(JSON.parse(saved));
-      }
-    } catch {}
+    storage.get(LAST_READ_KEY).then(saved => {
+      if (saved) setLastRead(JSON.parse(saved));
+    }).catch(() => {});
   }, []);
 
   const saveLastRead = useCallback((surahNumber, ayahNumber) => {
@@ -48,17 +46,15 @@ export function useLastRead() {
       surahName: SURAH_NAMES[surahNumber] || `Surah ${surahNumber}`,
       timestamp: Date.now(),
     };
-    try {
-      localStorage.setItem(LAST_READ_KEY, JSON.stringify(data));
+    storage.set(LAST_READ_KEY, JSON.stringify(data)).then(() => {
       setLastRead(data);
-    } catch {}
+    }).catch(() => {});
   }, []);
 
   const clearLastRead = useCallback(() => {
-    try {
-      localStorage.removeItem(LAST_READ_KEY);
+    storage.remove(LAST_READ_KEY).then(() => {
       setLastRead(null);
-    } catch {}
+    }).catch(() => {});
   }, []);
 
   return { lastRead, saveLastRead, clearLastRead };
