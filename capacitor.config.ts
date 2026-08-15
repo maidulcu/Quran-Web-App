@@ -6,10 +6,12 @@ const config: CapacitorConfig = {
   webDir: 'out',
   server: {
     androidScheme: 'https',
+    cleartext: true,
   },
   android: {
     allowMixedContent: true,
     backgroundColor: '#004532',
+    webContentsDebuggingEnabled: false,
   },
   plugins: {
     SplashScreen: {
@@ -27,8 +29,9 @@ const config: CapacitorConfig = {
       backgroundColor: '#004532',
       overlaysWebView: false,
     },
-    Network: {
-      // No config needed, just ensure plugin is loaded
+    App: {
+      // Force reload on app resume to get fresh assets
+      launchUrl: '',
     },
   },
 };

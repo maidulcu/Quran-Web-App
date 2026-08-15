@@ -2,19 +2,11 @@
  * Bakes the core Quran dataset into public/data so the APK works offline
  * from the very first launch.
  *
- *   - surahs list            -> public/data/surahs.json
- *   - Arabic (ar.alafasy)    -> public/data/surah/{id}/ar.alafasy.json
- *   - Default transl.        -> public/data/surah/{id}/en.sahih.json
- *   - Tajweed markup         -> public/data/surah/{id}/quran-tajweed.json
- *   - Jalalayn tafsir        -> public/data/tafsir/{id}/ar.jalalayn.json
- *
  * Run with:  npm run build:offline-data
- *
- * These files are also copied into the static export (out/data) by
- * `next build` and end up bundled inside the Android APK via Capacitor.
+ * Resume:    npm run build:offline-data -- --resume
  */
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, access } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,12 +17,13 @@ const DATA_DIR = join(ROOT, 'public', 'data');
 const API = 'https://api.alquran.cloud/v1';
 const TEXT_EDITIONS = ['ar.alafasy', 'en.sahih'];
 const TAFSIR_ID = 'ar.jalalayn';
-const OUT_TRANSLATION = 'en.sahih';
 
-const CONCURRENCY = 4;
-const RETRIES = 3;
+const CONCURRENCY = 2; // Lower to avoid rate limits
+const RETRIES = 5;
+const BASE_DELAY = 1000;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const isResume = process.argv.includes('--resume');
 
 async function getJSON(url) {
   let lastErr;
@@ -38,14 +31,19 @@ async function getJSON(url) {
     try {
       const res = await fetch(url);
       if (res.status === 429) {
-        await sleep(1000 * attempt);
+        const delay = BASE_DELAY * Math.pow(2, attempt);
+        console.log(`\n  Rate limited, waiting ${delay}ms...`);
+        await sleep(delay);
         continue;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
       lastErr = err;
-      await sleep(500 * attempt);
+      const delay = BASE_DELAY * attempt;
+      if (attempt < RETRIES) {
+        await sleep(delay);
+      }
     }
   }
   throw lastErr;
@@ -57,15 +55,30 @@ async function writeJSON(relPath, data) {
   await writeFile(full, JSON.stringify(data), 'utf8');
 }
 
+async function fileExists(relPath) {
+  try {
+    await access(join(DATA_DIR, relPath));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function pool(items, worker) {
   let i = 0;
+  const errors = [];
   const runners = Array.from({ length: CONCURRENCY }, async () => {
     while (i < items.length) {
       const item = items[i++];
-      await worker(item);
+      try {
+        await worker(item);
+      } catch (err) {
+        errors.push({ item, error: err });
+      }
     }
   });
   await Promise.all(runners);
+  return errors;
 }
 
 async function main() {
@@ -79,8 +92,14 @@ async function main() {
   const total = surahNumbers.length;
   const log = () => process.stdout.write(`\r  baked ${done}/${total} surahs`);
 
-  await pool(surahNumbers, async (id) => {
-    // 1. Arabic + default translation in one combined call.
+  const surahErrors = await pool(surahNumbers, async (id) => {
+    const combinedPath = `surah/${id}/${TEXT_EDITIONS[0]}.json`;
+    if (isResume && await fileExists(combinedPath)) {
+      done++;
+      log();
+      return;
+    }
+
     const combined = await getJSON(`${API}/surah/${id}/editions/${TEXT_EDITIONS.join(',')}`);
     for (const ed of TEXT_EDITIONS) {
       const surahObj = combined.data.find((d) => d.edition?.identifier === ed);
@@ -89,26 +108,40 @@ async function main() {
       }
     }
 
-    // 2. Tajweed-colored Arabic.
     const tajweed = await getJSON(`${API}/surah/${id}/quran-tajweed`);
     await writeJSON(`surah/${id}/quran-tajweed.json`, tajweed);
 
-    // 3. Jalalayn tafsir.
     const tafsir = await getJSON(`${API}/surah/${id}/${TAFSIR_ID}`);
     await writeJSON(`tafsir/${id}/${TAFSIR_ID}.json`, tafsir);
 
     done++;
     log();
   });
+
+  if (surahErrors.length > 0) {
+    console.log(`\n  ⚠ ${surahErrors.length} surahs failed:`);
+    surahErrors.forEach(e => console.log(`    - Surah ${e.item}: ${e.error.message}`));
+  }
+
   console.log('\n✓ Surahs/tafsir/tajweed baked.');
 
   // ── Mushaf pages (1..604) ────────────────────────────────────────────
   console.log('→ Baking 604 Mushaf pages…');
   const TOTAL_PAGES = 604;
   let paged = 0;
-  await pool(
+  let skipped = 0;
+
+  const pageErrors = await pool(
     Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1),
     async (n) => {
+      const pagePath = `page/${n}.json`;
+      if (isResume && await fileExists(pagePath)) {
+        paged++;
+        skipped++;
+        process.stdout.write(`\r  baked ${paged}/${TOTAL_PAGES} pages (skipped ${skipped} cached)`);
+        return;
+      }
+
       const [ar, tr] = await Promise.all([
         getJSON(`${API}/page/${n}/ar.alafasy`),
         getJSON(`${API}/page/${n}/en.sahih`),
@@ -119,17 +152,26 @@ async function main() {
         ...ayah,
         translationText: trAyahs[index]?.text || '',
       }));
-      await writeJSON(`page/${n}.json`, {
+      await writeJSON(pagePath, {
         data: { ...ar.data, ayahs: mergedAyahs, surahs: ar.data.surahs },
       });
       paged++;
-      process.stdout.write(`\r  baked ${paged}/${TOTAL_PAGES} pages`);
+      process.stdout.write(`\r  baked ${paged}/${TOTAL_PAGES} pages${skipped > 0 ? ` (skipped ${skipped} cached)` : ''}`);
     }
   );
+
+  if (pageErrors.length > 0) {
+    console.log(`\n\n  ⚠ ${pageErrors.length} pages failed:`);
+    pageErrors.slice(0, 10).forEach(e => console.log(`    - Page ${e.item}: ${e.error.message}`));
+    if (pageErrors.length > 10) console.log(`    ... and ${pageErrors.length - 10} more`);
+    console.log(`\n  Run with --resume to retry failed pages.`);
+  }
+
   console.log('\n✓ Offline data baked into public/data');
 }
 
 main().catch((err) => {
-  console.error('\n✗ Failed to build offline data:', err);
+  console.error('\n✗ Failed to build offline data:', err.message || err);
+  console.error('  Run with --resume to retry from where it left off.');
   process.exit(1);
 });

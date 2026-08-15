@@ -9,19 +9,32 @@ BUILD_TYPE=${1:-debug}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Auto-detect Java 21
+if [ -z "$JAVA_HOME" ]; then
+  if [ -d "/opt/homebrew/opt/openjdk@21" ]; then
+    export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+  elif [ -d "/usr/local/opt/openjdk@21" ]; then
+    export JAVA_HOME=/usr/local/opt/openjdk@21
+  else
+    echo "ERROR: Java 21 not found. Install with: brew install openjdk@21"
+    exit 1
+  fi
+fi
+
 echo "=== Al-Quran Android Build ==="
+echo "Java: $($JAVA_HOME/bin/java -version 2>&1 | head -1)"
 echo "Build type: $BUILD_TYPE"
 echo ""
 
 # Step 1: Build offline data
 echo "Step 1: Building offline data..."
 cd "$ROOT_DIR"
-npm run build:offline-data
+npm run build:offline-data -- --resume 2>&1 | tail -5
 
 # Step 2: Build mobile export
 echo ""
 echo "Step 2: Building mobile export..."
-npm run build:mobile
+npm run build:mobile 2>&1 | tail -5
 
 # Step 3: Sync with Capacitor
 echo ""
@@ -50,9 +63,17 @@ if [ "$BUILD_TYPE" = "release" ]; then
 else
     echo ""
     echo "=== Debug Build ==="
-    ./gradlew assembleDebug
+    ./gradlew clean assembleDebug
+    APK_PATH=$(find app/build/outputs -name "*.apk" -type f | head -1)
+    APK_SIZE=$(ls -lh "$APK_PATH" | awk '{print $5}')
     echo ""
-    echo "APK location: app/build/outputs/apk/debug/app-debug.apk"
+    echo "APK built: $APK_PATH ($APK_SIZE)"
+    echo ""
+    echo "To install on connected device:"
+    echo "  adb install $APK_PATH"
+    echo ""
+    echo "Or transfer app-debug.apk to your phone and install manually."
+    echo "IMPORTANT: Uninstall old version first!"
 fi
 
 echo ""

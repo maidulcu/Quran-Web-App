@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const isMobile = process.env.NEXT_PUBLIC_BUILD_TARGET === 'mobile';
+const BUILD_VERSION = Date.now().toString();
 
 const nextConfig = {
   output: isMobile ? 'export' : 'standalone',
@@ -10,7 +11,12 @@ const nextConfig = {
     domains: ['cdn.islamic.network'],
   },
   ...(isMobile
-    ? {}
+    ? {
+        // Add build version for cache busting
+        publicRuntimeConfig: {
+          buildVersion: BUILD_VERSION,
+        },
+      }
     : {
         async rewrites() {
           return [

@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import MainWrapper from './components/MainWrapper';
 
 const SITE_URL = 'https://quran.learntrueislam.com';
+const BUILD_VERSION = Date.now().toString();
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -45,12 +46,21 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+        <meta name="build-version" content={BUILD_VERSION} />
         <script dangerouslySetInnerHTML={{
           __html: `
             try {
               const theme = localStorage.getItem('theme');
               if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
+              }
+              // Clear cache on version change
+              const storedVersion = localStorage.getItem('buildVersion');
+              if (storedVersion !== '${BUILD_VERSION}') {
+                localStorage.setItem('buildVersion', '${BUILD_VERSION}');
+                if ('caches' in window) {
+                  caches.keys().then(names => names.forEach(name => caches.delete(name)));
+                }
               }
             } catch (e) {}
           `
