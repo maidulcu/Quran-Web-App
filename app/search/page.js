@@ -42,23 +42,24 @@ export default function Search() {
   }, [initialQ]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Search Quran</h1>
-      
+    <div className="container mx-auto px-4 py-6">
+      <h1 className="text-headline-lg font-display font-semibold text-center mb-6">Search Quran</h1>
+
       <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
-        <div className="flex gap-2">
+        <div className="flex items-center bg-white dark:bg-gray-800 rounded-full ring-1 ring-outline-variant/50 dark:ring-outline-variant-dark/50 px-4 py-2.5 shadow-sm">
+          <span className="material-symbols-outlined text-gray-400 text-[20px] mr-2">search</span>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for verses..."
             aria-label="Search the Quran"
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 dark:bg-gray-800 dark:text-gray-100 transition-colors"
+            className="flex-1 bg-transparent outline-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 font-body"
           />
           <button
             type="submit"
             disabled={loading}
-            className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50 transition-colors"
+            className="bg-primary text-white px-5 py-2 rounded-full hover:bg-primary-600 disabled:opacity-50 transition-colors text-sm font-medium font-body"
           >
             {loading ? 'Searching...' : 'Search'}
           </button>
@@ -67,16 +68,16 @@ export default function Search() {
 
       {!searched && !loading && (
         <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          <p className="text-lg">Enter a keyword to search the Quran</p>
-          <p className="text-sm mt-1">Search by verse text, topic, or Surah name</p>
+          <span className="material-symbols-outlined text-[64px] text-gray-300 dark:text-gray-600 mb-4 block">search</span>
+          <p className="text-lg font-body">Enter a keyword to search the Quran</p>
+          <p className="text-sm mt-1 font-body">Search by verse text, topic, or Surah name</p>
         </div>
       )}
 
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg animate-pulse">
+            <div key={i} className="bg-white dark:bg-gray-800 p-5 rounded-2xl animate-pulse">
               <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-3" />
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2" />
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
@@ -87,26 +88,26 @@ export default function Search() {
 
       {!loading && error && (
         <div className="text-center mt-8">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 max-w-md mx-auto">
-            <svg className="w-8 h-8 mx-auto mb-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-            <p className="text-red-700 dark:text-red-300">{error}</p>
-            <button onClick={() => performSearch(query)} className="mt-3 text-sm text-teal-600 hover:text-teal-700 font-medium">Try Again</button>
+          <div className="bg-error-container/30 dark:bg-error-container-dark/30 border border-error/20 rounded-2xl p-6 max-w-md mx-auto">
+            <span className="material-symbols-outlined text-[32px] text-error mb-3 block">error</span>
+            <p className="text-error font-body">{error}</p>
+            <button onClick={() => performSearch(query)} className="mt-3 text-sm text-primary hover:text-primary-600 font-medium font-body">Try Again</button>
           </div>
         </div>
       )}
 
       {!loading && !error && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {results.map((result, index) => (
             <Link
               key={index}
               href={`/surah/${result.surah.number}/${result.numberInSurah}`}
-              className="block bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              className="block bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2 transition-all"
             >
-              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2 font-body">
                 Surah {result.surah.englishName} ({result.surah.number}:{result.numberInSurah})
               </div>
-              <div className="text-gray-700 dark:text-gray-300">
+              <div className="text-gray-700 dark:text-gray-300 font-body">
                 {result.text}
               </div>
             </Link>
@@ -116,9 +117,9 @@ export default function Search() {
 
       {!loading && !error && searched && results.length === 0 && query && (
         <div className="text-center text-gray-500 mt-8">
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          <p className="text-lg">No results found for &quot;{query}&quot;</p>
-          <p className="text-sm mt-1">Try a different keyword or <Link href="/surahs" className="text-teal-600 hover:text-teal-700">browse all surahs</Link></p>
+          <span className="material-symbols-outlined text-[64px] text-gray-300 dark:text-gray-600 mb-4 block">search_off</span>
+          <p className="text-lg font-body">No results found for &quot;{query}&quot;</p>
+          <p className="text-sm mt-1 font-body">Try a different keyword or <Link href="/surahs" className="text-primary hover:text-primary-600">browse all surahs</Link></p>
         </div>
       )}
     </div>

@@ -13,6 +13,9 @@ yarn-error.log*
 .next/
 out/
 
+# Baked offline data (regenerate with: npm run build:offline-data)
+public/data/
+
 # Capacitor - generated native project (rebuildable via `npx cap sync`)
 android/
 ios/

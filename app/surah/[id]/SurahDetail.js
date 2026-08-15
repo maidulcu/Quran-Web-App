@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSurahMultipleEditions, getTafsirForSurah, getTafsirEdition, getSurahTajweed, DEFAULT_TRANSLATION } from '../../lib/api';
 import { useAudioPlayer } from '../../context/AudioPlayerContext';
@@ -24,6 +24,13 @@ import TranslationSelector from '../../components/TranslationSelector';
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
 
+const TAJWEED_COLORS = [
+  { label: 'Madd', color: '#d946ef', desc: 'Elongation' },
+  { label: 'Ghunnah', color: '#f59e0b', desc: 'Nasal Sound' },
+  { label: 'Ikhfa', color: '#10b981', desc: 'Concealment' },
+  { label: 'Qalqalah', color: '#3b82f6', desc: 'Echoing' },
+];
+
 function WordByWordLine({ surahNumber, ayahNumber, fetchWords }) {
   const [words, setWords] = useState([]);
   const [loaded, setLoaded] = useState(false);
@@ -40,14 +47,14 @@ function WordByWordLine({ surahNumber, ayahNumber, fetchWords }) {
   if (!loaded || words.length === 0) return null;
 
   return (
-    <div className="mt-2 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700/50">
+    <div className="mt-2 pt-2 border-t border-dashed border-outline-variant/50 dark:border-outline-variant-dark/50">
       <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
         {words.map((word, i) => (
           <span key={i} className="text-center group cursor-default">
-            <span lang="ar" dir="rtl" className="block text-sm font-quran text-gray-800 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+            <span lang="ar" dir="rtl" className="block text-sm font-quran text-gray-800 dark:text-gray-200 group-hover:text-primary dark:group-hover:text-primary-300 transition-colors">
               {word.text}
             </span>
-            <span className="block text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
+            <span className="block text-[10px] text-gray-400 dark:text-gray-500 leading-tight font-body">
               {word.translation}
             </span>
           </span>
@@ -59,10 +66,12 @@ function WordByWordLine({ surahNumber, ayahNumber, fetchWords }) {
 
 export default function SurahDetail({ initialData }) {
   const { id } = useParams();
+  const router = useRouter();
   const [surah, setSurah] = useState(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState(null);
   const [copiedAyah, setCopiedAyah] = useState(null);
+  const [showTajweedGuide, setShowTajweedGuide] = useState(true);
   const ayahRefs = useRef({});
   const { playAudio, currentAyah, isPlaying, setQueue } = useAudioPlayer();
   const { saveLastRead } = useLastRead();
@@ -81,7 +90,6 @@ export default function SurahDetail({ initialData }) {
   const [expandedTafsir, setExpandedTafsir] = useState({});
   const [showIntro, setShowIntro] = useState(true);
 
-  // Track reading progress
   useEffect(() => {
     if (!surah) return;
     const observer = new IntersectionObserver(
@@ -152,7 +160,6 @@ export default function SurahDetail({ initialData }) {
     return () => controller.abort();
   }, [id, initialData, selectedTranslations]);
 
-  // Fetch tafsir when enabled or edition changes
   useEffect(() => {
     if (!tafsirEnabled || !surah) {
       setTafsirData({});
@@ -174,7 +181,6 @@ export default function SurahDetail({ initialData }) {
     return () => { cancelled = true; };
   }, [surah, tafsirEnabled, tafsirEdition]);
 
-  // Fetch tajweed data when enabled
   useEffect(() => {
     if (!tajweedEnabled || !surah) {
       setTajweedData({});
@@ -196,7 +202,6 @@ export default function SurahDetail({ initialData }) {
     return () => { cancelled = true; };
   }, [surah, tajweedEnabled]);
 
-  // Auto-scroll to current ayah during playback
   useEffect(() => {
     if (!currentAyah || !surah) return;
     if (currentAyah.surahName !== surah.englishName) return;
@@ -239,7 +244,6 @@ export default function SurahDetail({ initialData }) {
       setCopiedAyah(ayahNumber);
       setTimeout(() => setCopiedAyah(null), 2000);
     } catch {
-      // Fallback for older browsers
       const textarea = document.createElement('textarea');
       textarea.value = text;
       document.body.appendChild(textarea);
@@ -271,7 +275,7 @@ export default function SurahDetail({ initialData }) {
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg animate-pulse">
+            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl animate-pulse">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-4" />
               <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
@@ -285,13 +289,13 @@ export default function SurahDetail({ initialData }) {
   if (error || !surah) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 max-w-md mx-auto">
-          <svg className="w-12 h-12 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Unable to Load Surah</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">{error || 'Surah not found'}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 max-w-md mx-auto">
+          <span className="material-symbols-outlined text-[48px] text-error mb-4 block">error</span>
+          <h2 className="text-xl font-semibold font-body mb-2">Unable to Load Surah</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6 font-body">{error || 'Surah not found'}</p>
           <div className="flex gap-3 justify-center">
-            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">Retry</button>
-            <Link href="/surahs" className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Browse Surahs</Link>
+            <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary-600 transition-colors font-medium font-body">Retry</button>
+            <Link href="/surahs" className="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-body">Browse Surahs</Link>
           </div>
         </div>
       </div>
@@ -304,163 +308,96 @@ export default function SurahDetail({ initialData }) {
   const surahInfo = getSurahInfo(surah.number);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6" aria-label="Breadcrumb">
-        <Link href="/" className="hover:text-teal-600 transition-colors">Home</Link>
-        <span>/</span>
-        <Link href="/surahs" className="hover:text-teal-600 transition-colors">Surahs</Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white">{surah.englishName}</span>
-      </nav>
-
-      {/* Surah Info Header */}
-      <div className="text-center mb-8 bg-gradient-to-b from-teal-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-        <div lang="ar" className={`mb-3 text-teal-800 dark:text-teal-200 ${fontClass} quran-header`}>
-          {surah.name}
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
-          Surah {surah.englishName} <span className="text-gray-500 dark:text-gray-400 font-normal">({surah.englishNameTranslation})</span>
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-          {surah.englishNameTranslation} &bull; Chapter {surah.number} &bull; {surah.numberOfAyahs} Verses
-        </p>
-        <div className="flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 px-3 py-1 rounded-full">
-            {surah.revelationType}
-          </span>
-          <span>{surah.numberOfAyahs} Ayahs</span>
-        </div>
-
-        {/* Controls */}
-        <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-          {/* Font toggle */}
+    <div className="container mx-auto px-4 py-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => router.back()} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <span className="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+        </button>
+        <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Font:</span>
-            <button
-              onClick={toggleFont}
-              className="text-xs px-3 py-1 rounded-full bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 hover:bg-teal-200 dark:hover:bg-teal-800/50 transition-colors"
-            >
-              {font === 'Uthmanic' ? 'Uthmanic' : 'Indo-Pak'} → {font === 'Uthmanic' ? 'Indo-Pak' : 'Uthmanic'}
-            </button>
+            <h1 className="font-display font-semibold text-gray-900 dark:text-white truncate">{surah.englishName}</h1>
+            <span className="text-[10px] font-semibold text-primary bg-primary-container dark:bg-primary-container-dark px-2 py-0.5 rounded-full font-body">OFFLINE</span>
           </div>
-
-          {/* Translation selector */}
-          <TranslationSelector
-            selected={selectedTranslations}
-            available={transAvailable}
-            onChange={toggleTranslation}
-          />
-
-          {/* Tajweed toggle */}
-          <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
-
-          {/* Word-by-word toggle */}
-          <button
-            onClick={toggleWbw}
-            className={`text-xs px-3 py-1 rounded-full transition-colors ${
-              wbwEnabled
-                ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-200 ring-1 ring-orange-300 dark:ring-orange-700'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-            aria-label={wbwEnabled ? 'Disable word-by-word' : 'Enable word-by-word'}
-          >
-            {wbwEnabled ? 'WBW On' : 'Word-by-Word'}
-          </button>
-
-          {/* Tafsir selector */}
-          <TafsirSelector
-            enabled={tafsirEnabled}
-            edition={tafsirEdition}
-            onToggle={toggleTafsir}
-            onSelectEdition={selectEdition}
-          />
-
-          {/* Font size slider */}
-          <FontSizeSlider />
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-body">{surah.englishNameTranslation} • {surah.numberOfAyahs} Ayahs</p>
         </div>
+        <button onClick={toggleTajweed} className={`p-2 rounded-full transition-colors ${tajweedEnabled ? 'bg-primary-container dark:bg-primary-container-dark text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500'}`} aria-label="Toggle tajweed rules">
+          <span className="material-symbols-outlined text-[20px] fill">auto_fix_high</span>
+        </button>
+        <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500">
+          <span className="material-symbols-outlined text-[20px]">settings</span>
+        </button>
       </div>
 
       {/* Bismillah */}
       {showBismillah && (
-        <div className="text-center mb-8 py-6">
-          <p lang="ar" className={`text-gray-800 dark:text-gray-100 ${fontClass} quran-text text-center`}>
+        <div className="text-center mb-6 py-4 border-b border-outline-variant/30 dark:border-outline-variant-dark/30">
+          <p lang="ar" className={`text-primary dark:text-primary-300 ${fontClass} text-arabic-quran-lg text-center`}>
             {BISMILLAH}
           </p>
         </div>
       )}
 
+      {/* Tajweed Color Guide */}
+      {tajweedEnabled && showTajweedGuide && (
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[18px]">menu_book</span>
+              <span className="text-label-caps text-primary font-body">Tajweed Color Guide</span>
+            </div>
+            <button onClick={() => setShowTajweedGuide(false)} className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <span className="material-symbols-outlined text-[16px] text-gray-400">close</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {TAJWEED_COLORS.map((item) => (
+              <div key={item.label} className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-xs text-gray-700 dark:text-gray-300 font-body">{item.label} ({item.desc})</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Controls Row */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        <button onClick={toggleFont} className="text-xs px-3 py-1.5 rounded-full bg-primary-container dark:bg-primary-container-dark text-primary hover:bg-primary/20 transition-colors font-body font-medium">
+          {font === 'Uthmanic' ? 'Uthmanic' : 'Indo-Pak'} → {font === 'Uthmanic' ? 'Indo-Pak' : 'Uthmanic'}
+        </button>
+        <TranslationSelector selected={selectedTranslations} available={transAvailable} onChange={toggleTranslation} />
+        <TajweedToggle enabled={tajweedEnabled} onToggle={toggleTajweed} />
+        <button onClick={toggleWbw} className={`text-xs px-3 py-1.5 rounded-full transition-colors font-body ${wbwEnabled ? 'bg-secondary-container dark:bg-secondary-container-dark text-secondary ring-1 ring-secondary/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}>
+          {wbwEnabled ? 'WBW On' : 'Word-by-Word'}
+        </button>
+        <TafsirSelector enabled={tafsirEnabled} edition={tafsirEdition} onToggle={toggleTafsir} onSelectEdition={selectEdition} />
+        <FontSizeSlider />
+      </div>
+
       {/* Surah Introduction */}
       {surahInfo.summary && (
-        <div className="mb-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-          <button
-            onClick={() => setShowIntro(!showIntro)}
-            className="flex items-center gap-2 text-left w-full"
-            aria-expanded={showIntro}
-          >
-            <svg
-              className={`w-5 h-5 text-teal-600 transition-transform ${showIntro ? 'rotate-90' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Introduction to Surah {surah.englishName}
-            </h2>
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40">
+          <button onClick={() => setShowIntro(!showIntro)} className="flex items-center gap-2 text-left w-full" aria-expanded={showIntro}>
+            <span className={`material-symbols-outlined text-primary text-[20px] transition-transform ${showIntro ? 'rotate-90' : ''}`}>chevron_right</span>
+            <h2 className="text-base font-semibold font-body">Introduction to Surah {surah.englishName}</h2>
           </button>
-
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showIntro ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
-              {surahInfo.summary}
-            </p>
-
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showIntro ? 'max-h-[2000px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-3 font-body text-sm">{surahInfo.summary}</p>
             {surahInfo.themes.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Key Themes</h3>
-                <div className="flex flex-wrap gap-2">
+              <div className="mb-3">
+                <h3 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5 font-body">Key Themes</h3>
+                <div className="flex flex-wrap gap-1.5">
                   {surahInfo.themes.map((theme, i) => (
-                    <span key={i} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2.5 py-1 rounded-full">
-                      {theme}
-                    </span>
+                    <span key={i} className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-body">{theme}</span>
                   ))}
                 </div>
               </div>
             )}
-
             {surahInfo.virtues && (
-              <div className="bg-teal-50/50 dark:bg-teal-900/10 rounded-lg p-4 mt-3">
-                <h3 className="text-sm font-semibold text-teal-700 dark:text-teal-300 mb-1">Virtues &amp; Benefits</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {surahInfo.virtues}
-                </p>
-              </div>
-            )}
-
-            {surahInfo.famousVerses.length > 0 && (
-              <div className="mt-4">
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Notable Verses</h3>
-                <div className="space-y-2">
-                  {surahInfo.famousVerses.map((verse, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        const el = ayahRefs.current[verse.ayah];
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }}
-                      className="flex items-start gap-3 text-left w-full p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                    >
-                      <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0">
-                        {surah.number}:{verse.ayah}
-                      </span>
-                      <div>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">{verse.name}</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{verse.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              <div className="bg-primary-container/50 dark:bg-primary-container-dark/30 rounded-xl p-3 mt-2">
+                <h3 className="text-xs font-semibold text-primary mb-1 font-body">Virtues &amp; Benefits</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-body">{surahInfo.virtues}</p>
               </div>
             )}
           </div>
@@ -468,223 +405,111 @@ export default function SurahDetail({ initialData }) {
       )}
 
       {/* Ayahs */}
-      <div className="space-y-4">
+      <div className="space-y-ayah-spacing">
         {surah.ayahs.map((ayah) => (
           <article
             key={ayah.number}
             ref={(el) => { ayahRefs.current[ayah.number] = el; }}
             data-ayah={ayah.number}
-            className={`bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow-sm ring-1 transition-all duration-300 ${
+            className={`bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm ring-1 transition-all duration-300 ${
               isCurrentAyah(ayah.number) && isPlaying
-                ? 'ring-2 ring-teal-400 bg-teal-50 dark:bg-teal-900/20 shadow-md'
-                : 'ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md'
+                ? 'ring-2 ring-primary bg-primary-container/30 dark:bg-primary-container-dark/30 shadow-elevation-2'
+                : 'ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2'
             }`}
           >
+            {/* Ayah Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 text-xs font-medium px-2.5 py-1 rounded-full">
-                  {surah.number}:{ayah.number}
-                </span>
+                <span className="bg-primary-container dark:bg-primary-container-dark text-primary text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center font-body">{ayah.number}</span>
                 {ayah.audio && (
-                  <button
-                    onClick={() => handlePlayAyah(ayah)}
-                    className={`p-1.5 rounded-full transition-colors ${
-                      isCurrentAyah(ayah.number) && isPlaying
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-teal-100 dark:hover:bg-teal-900/50'
-                    }`}
-                    aria-label={isCurrentAyah(ayah.number) && isPlaying ? `Pause ayah ${ayah.number}` : `Play ayah ${ayah.number}`}
-                  >
-                    {isCurrentAyah(ayah.number) && isPlaying ? (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    )}
+                  <button onClick={() => handlePlayAyah(ayah)} className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isCurrentAyah(ayah.number) && isPlaying ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-primary-container dark:hover:bg-primary-container-dark'}`} aria-label={isCurrentAyah(ayah.number) && isPlaying ? `Pause ayah ${ayah.number}` : `Play ayah ${ayah.number}`}>
+                    <span className="material-symbols-outlined text-[16px]">{isCurrentAyah(ayah.number) && isPlaying ? 'pause' : 'play_arrow'}</span>
                   </button>
                 )}
+                <button onClick={() => {}} className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary-container/50 dark:hover:bg-primary-container-dark/50 transition-colors" aria-label={`Bookmark ayah ${ayah.number}`}>
+                  <span className="material-symbols-outlined text-[18px]">bookmark_border</span>
+                </button>
               </div>
-              <div className="flex items-center gap-1">
-                {/* Copy button */}
-                <button
-                  onClick={() => handleCopy(`${ayah.text}\n\n${ayah.translationText}`, ayah.number)}
-                  className="p-1.5 rounded-full text-gray-400 hover:text-teal-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={`Copy ayah ${ayah.number}`}
-                  title="Copy"
-                >
-                  {copiedAyah === ayah.number ? (
-                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                  )}
+              <div className="flex items-center gap-0.5">
+                <button onClick={() => handleCopy(`${ayah.text}\n\n${ayah.translationText}`, ayah.number)} className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary-container/50 dark:hover:bg-primary-container-dark/50 transition-colors" aria-label={`Copy ayah ${ayah.number}`}>
+                  <span className="material-symbols-outlined text-[16px]">{copiedAyah === ayah.number ? 'check' : 'content_copy'}</span>
                 </button>
-                {/* Share button */}
-                <button
-                  onClick={() => handleShare(ayah)}
-                  className="p-1.5 rounded-full text-gray-400 hover:text-teal-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={`Share ayah ${ayah.number}`}
-                  title="Share"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                <button onClick={() => handleShare(ayah)} className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary-container/50 dark:hover:bg-primary-container-dark/50 transition-colors" aria-label={`Share ayah ${ayah.number}`}>
+                  <span className="material-symbols-outlined text-[16px]">share</span>
                 </button>
-                <button
-                  onClick={() => {
-                    const el = ayahRefs.current[ayah.number];
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
-                  className="p-1.5 rounded-full text-gray-400 hover:text-teal-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  aria-label={`Details for ayah ${ayah.number}`}
-                  title="Details"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <button onClick={() => toggleTafsirAyah(ayah.number)} className="p-1.5 rounded-full text-gray-400 hover:text-primary hover:bg-primary-container/50 dark:hover:bg-primary-container-dark/50 transition-colors" aria-label={`Tafsir for ayah ${ayah.number}`}>
+                  <span className="material-symbols-outlined text-[16px]">menu_book</span>
                 </button>
-                {/* Note button */}
-                <button
-                  onClick={() => {
-                    const el = document.getElementById(`note-${ayah.number}`);
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
-                  className={`p-1.5 rounded-full transition-colors ${
-                    getNote(surah.number, ayah.number)
-                      ? 'text-yellow-500 hover:text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20'
-                      : 'text-gray-400 hover:text-teal-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                  }`}
-                  aria-label={`Note for ayah ${ayah.number}`}
-                  title="Note"
-                >
-                  <svg className="w-4 h-4" fill={getNote(surah.number, ayah.number) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                <button onClick={() => { const el = document.getElementById(`note-${ayah.number}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className={`p-1.5 rounded-full transition-colors ${getNote(surah.number, ayah.number) ? 'text-secondary bg-secondary-container/50 dark:bg-secondary-container-dark/50' : 'text-gray-400 hover:text-primary hover:bg-primary-container/50 dark:hover:bg-primary-container-dark/50'}`} aria-label={`Note for ayah ${ayah.number}`}>
+                  <span className="material-symbols-outlined text-[16px] fill">edit_note</span>
                 </button>
               </div>
             </div>
+
+            {/* Arabic Text */}
             <div
               lang="ar"
               dir="rtl"
-              className={`text-right mb-4 text-gray-800 dark:text-gray-100 ${fontClass} quran-text`}
+              className={`text-right mb-3 text-gray-800 dark:text-gray-100 ${fontClass} text-arabic-quran-md`}
               {...(tajweedEnabled && tajweedData[ayah.number] ? {
                 dangerouslySetInnerHTML: { __html: parseTajweedText(tajweedData[ayah.number]) }
               } : { children: ayah.text })}
             />
-            <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+
+            {/* Translation */}
+            <div className="text-gray-600 dark:text-gray-400 text-body-translation leading-relaxed font-body">
               {ayah.translationText}
             </div>
 
-            {/* Word-by-word translations */}
+            {/* Word-by-word */}
             {wbwEnabled && (
-              <WordByWordLine
-                surahNumber={surah.number}
-                ayahNumber={ayah.number}
-                fetchWords={fetchWords}
-              />
+              <WordByWordLine surahNumber={surah.number} ayahNumber={ayah.number} fetchWords={fetchWords} />
             )}
 
+            {/* Other translations */}
             {ayah.otherTranslations?.map(t => t.text ? (
-              <div key={t.id} className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700/50">
-                <span className="text-xs font-medium text-gray-400">{transAvailable.find(e => e.id === t.id)?.shortName || t.id}</span>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mt-0.5">{t.text}</p>
+              <div key={t.id} className="mt-2 pt-2 border-t border-outline-variant/30 dark:border-outline-variant-dark/30">
+                <span className="text-[10px] font-semibold text-gray-400 font-body">{transAvailable.find(e => e.id === t.id)?.shortName || t.id}</span>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mt-0.5 font-body">{t.text}</p>
               </div>
             ) : null)}
 
-            {/* Tafsir section */}
+            {/* Tafsir */}
             {tafsirEnabled && tafsirData[ayah.number] && (
-              <div className="mt-3 border-t border-gray-100 dark:border-gray-700/50 pt-3">
-                <button
-                  onClick={() => toggleTafsirAyah(ayah.number)}
-                  className="flex items-center gap-2 text-xs text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors w-full"
-                  aria-expanded={!!expandedTafsir[ayah.number]}
-                >
-                  <svg
-                    className={`w-3 h-3 transition-transform ${expandedTafsir[ayah.number] ? 'rotate-90' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+              <div className="mt-3 border-t border-outline-variant/30 dark:border-outline-variant-dark/30 pt-3">
+                <button onClick={() => toggleTafsirAyah(ayah.number)} className="flex items-center gap-2 text-xs text-primary hover:text-primary-600 transition-colors w-full font-body" aria-expanded={!!expandedTafsir[ayah.number]}>
+                  <span className={`material-symbols-outlined text-[14px] transition-transform ${expandedTafsir[ayah.number] ? 'rotate-90' : ''}`}>chevron_right</span>
                   <span className="font-medium">{getTafsirEdition(tafsirEdition)?.name || 'Tafsir'}</span>
-                  {tafsirLoading && !tafsirData[ayah.number] && (
-                    <span className="text-gray-400">Loading...</span>
-                  )}
+                  {tafsirLoading && !tafsirData[ayah.number] && <span className="text-gray-400">Loading...</span>}
                 </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    expandedTafsir[ayah.number] ? 'max-h-[2000px] opacity-100 mt-2' : 'max-h-0 opacity-0'
-                  }`}
-                >
-                  <div
-                    className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: tafsirData[ayah.number] }}
-                  />
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedTafsir[ayah.number] ? 'max-h-[2000px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-gray-50 dark:bg-gray-700/30 rounded-xl p-3 prose prose-sm dark:prose-invert max-w-none font-body" dangerouslySetInnerHTML={{ __html: tafsirData[ayah.number] }} />
                 </div>
               </div>
             )}
 
-            {/* Note section */}
+            {/* Note */}
             <div id={`note-${ayah.number}`}>
-              <AyahNote
-                note={getNote(surah.number, ayah.number)}
-                onSave={(text) => saveNote(surah.number, ayah.number, text)}
-                onDelete={() => deleteNote(surah.number, ayah.number)}
-              />
+              <AyahNote note={getNote(surah.number, ayah.number)} onSave={(text) => saveNote(surah.number, ayah.number, text)} onDelete={() => deleteNote(surah.number, ayah.number)} />
             </div>
           </article>
         ))}
       </div>
 
-      {/* Prev/Next Surah Navigation */}
-      <div className="mt-12 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6">
+      {/* Prev/Next Surah */}
+      <div className="mt-10 flex items-center justify-between">
         {prevSurah ? (
-          <Link href={`/surah/${prevSurah}`} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          <Link href={`/surah/${prevSurah}`} className="flex items-center gap-2 text-primary hover:text-primary-600 transition-colors font-body font-medium">
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             <span>Previous Surah</span>
           </Link>
         ) : <span />}
         {nextSurah ? (
-          <Link href={`/surah/${nextSurah}`} className="flex items-center gap-2 text-teal-600 hover:text-teal-700 transition-colors">
+          <Link href={`/surah/${nextSurah}`} className="flex items-center gap-2 text-primary hover:text-primary-600 transition-colors font-body font-medium">
             <span>Next Surah</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
           </Link>
         ) : <span />}
-      </div>
-
-      {/* Related Resources */}
-      <div className="mt-8 bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 ring-1 ring-gray-200/60 dark:ring-gray-700/60">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Explore More</h2>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Link
-            href="/surahs"
-            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
-          >
-            <div className="bg-teal-100 dark:bg-teal-900/50 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Browse All Surahs</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">114 chapters of the Quran</p>
-            </div>
-          </Link>
-          <Link
-            href="/mushaf/1"
-            className="flex items-center gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 hover:shadow-md transition-shadow"
-          >
-            <div className="bg-teal-100 dark:bg-teal-900/50 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Mushaf View</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Read page by page like a physical Quran</p>
-            </div>
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-          Learn more about the Quran at{' '}
-          <a
-            href="https://learntrueislam.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-teal-600 hover:text-teal-700 underline"
-          >
-            learntrueislam.com
-          </a>
-        </p>
       </div>
     </div>
   );

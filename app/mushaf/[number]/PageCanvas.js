@@ -6,8 +6,7 @@ import AyahMarker from './AyahMarker';
 const BISMILLAH = 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ';
 const SKIP_BISMILLAH_SURAH = [9];
 
-export default function PageCanvas({ pageData, fontClass, currentAyah, isPlaying, onPlayAyah }) {
-  // Group ayahs by surah
+export default function PageCanvas({ pageData, fontClass, currentAyah, isPlaying, onPlayAyah, theme }) {
   const groups = useMemo(() => {
     const result = [];
     let current = null;
@@ -21,29 +20,30 @@ export default function PageCanvas({ pageData, fontClass, currentAyah, isPlaying
     return result;
   }, [pageData.ayahs]);
 
+  const isDark = theme === 'dark';
+  const textColor = isDark ? 'text-gray-100' : 'text-gray-800';
+  const pageBg = theme === 'cream' ? 'bg-[#FDFBF7]' : theme === 'sepia' ? 'bg-[#F4ECD8]' : theme === 'dark' ? 'bg-[#121212]' : 'bg-white';
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 p-6 sm:p-10 lg:p-14">
+    <div className={`${pageBg} rounded-2xl shadow-sm ornate-border p-6 sm:p-10 lg:p-14`}>
       {groups.map((group, gi) => (
         <div key={group.surah.number}>
-          {/* Surah Header */}
           <SurahHeader surah={group.surah} fontClass={fontClass} isFirst={gi === 0} />
 
-          {/* Bismillah */}
           {gi === 0 && !SKIP_BISMILLAH_SURAH.includes(group.surah.number) && group.surah.number !== 1 && (
             <div className="text-center mb-6">
-              <p lang="ar" dir="rtl" className={`text-gray-800 dark:text-gray-100 ${fontClass} quran-text text-center`}>
+              <p lang="ar" dir="rtl" className={`${textColor} ${fontClass} quran-text text-center`}>
                 {BISMILLAH}
               </p>
             </div>
           )}
 
-          {/* Continuous Arabic text */}
-          <div lang="ar" dir="rtl" className={`text-right text-gray-800 dark:text-gray-100 ${fontClass} quran-text`} style={{ lineHeight: '2.3' }}>
+          <div lang="ar" dir="rtl" className={`text-right ${textColor} ${fontClass} quran-text`} style={{ lineHeight: '2.3' }}>
             {group.ayahs.map((ayah, i) => {
               const isActive = currentAyah?.surahName === ayah.surah?.englishName && currentAyah?.number === ayah.numberInSurah;
               return (
                 <span key={ayah.number} className="inline">
-                  <span className="whitespace-normal">{ayah.text}</span>
+                  <span className="whitespace-normal hover:text-primary transition-colors cursor-pointer">{ayah.text}</span>
                   <AyahMarker
                     number={ayah.numberInSurah}
                     isActive={isActive && isPlaying}
@@ -57,9 +57,8 @@ export default function PageCanvas({ pageData, fontClass, currentAyah, isPlaying
         </div>
       ))}
 
-      {/* Page number */}
       <div className="mt-8 text-center">
-        <span className="text-sm text-gray-400 dark:text-gray-500 font-medium">{pageData.number}</span>
+        <span className="text-sm text-gray-400 dark:text-gray-500 font-medium font-body">{pageData.number}</span>
       </div>
     </div>
   );

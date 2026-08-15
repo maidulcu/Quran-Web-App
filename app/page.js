@@ -17,120 +17,123 @@ export default function Home() {
     router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 
+  const pinnedSurahs = [
+    { id: 36, name: 'Ya-Sin', type: 'Meccan', ayahs: 83 },
+    { id: 18, name: 'Al-Kahf', type: 'Meccan', ayahs: 110 },
+    { id: 67, name: 'Al-Mulk', type: 'Meccan', ayahs: 30 },
+  ];
+
+  const quickLinks = [
+    { href: '/search', title: 'Daily Dhikr', icon: 'spa', color: 'text-primary', bg: 'bg-primary-container dark:bg-primary-container-dark' },
+    { href: '/juzs', title: 'Juz Index', icon: 'import_contacts', color: 'text-primary', bg: 'bg-primary-container dark:bg-primary-container-dark' },
+    { href: '/surahs', title: 'Browse Surahs', icon: 'explore', color: 'text-secondary', bg: 'bg-secondary-container dark:bg-secondary-container-dark' },
+    { href: '/progress', title: 'My Notes', icon: 'edit_note', color: 'text-primary', bg: 'bg-primary-container dark:bg-primary-container-dark' },
+  ];
+
   return (
     <div className="relative">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-teal-50 to-white dark:from-gray-900 dark:to-gray-950" />
-        <div className="container mx-auto px-4 pt-14 pb-10 sm:pt-20 sm:pb-16">
-          <div className="text-center max-w-3xl mx-auto">
-            <div lang="ar" dir="rtl" className="text-5xl sm:text-6xl font-quran leading-snug mb-4 text-gray-800 dark:text-gray-100">
-              بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3 text-gray-900 dark:text-white">
-              Read and listen to the Holy Quran
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Explore all 114 Surahs with English translation and high‑quality audio recitations.
-            </p>
-
-            <form onSubmit={submit} className="max-w-xl mx-auto">
-              <div className="flex items-stretch gap-2 bg-white dark:bg-gray-800 rounded-xl shadow ring-1 ring-gray-200 dark:ring-gray-700 p-2">
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  className="flex-1 bg-transparent outline-none px-3 py-2 text-gray-900 dark:text-gray-100 placeholder:text-gray-400"
-                  placeholder="Search verses, topics, or Surah names"
-                  aria-label="Search the Quran"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-lg bg-teal-600 text-white font-medium hover:bg-teal-700 active:bg-teal-800 transition-colors"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-6 text-sm text-gray-600 dark:text-gray-400">
-              114 Surahs • Arabic + English • Audio Recitation
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Continue Reading */}
-      {lastRead && (
-        <section className="container mx-auto px-4 pb-8">
+      {/* Last Read Card */}
+      <section className="container mx-auto px-4 pt-4 pb-3">
+        {lastRead ? (
           <Link
             href={`/surah/${lastRead.surahNumber}/${lastRead.ayahNumber}`}
-            className="block bg-gradient-to-r from-teal-50 to-teal-100/50 dark:from-teal-900/30 dark:to-teal-800/20 rounded-xl p-5 ring-1 ring-teal-200/60 dark:ring-teal-700/40 hover:shadow-md transition-all"
+            className="block relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary-600 p-5 shadow-elevation-2 hover:shadow-lg transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className="bg-teal-600 text-white w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            <div className="relative flex items-center justify-between">
               <div>
-                <p className="text-sm text-teal-700 dark:text-teal-300 font-medium">Continue Reading</p>
-                <p className="text-gray-900 dark:text-white font-semibold">{lastRead.surahName} • Ayah {lastRead.ayahNumber}</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-white/80 text-[18px]">history</span>
+                  <span className="text-xs font-medium text-white/80 uppercase tracking-wider font-body">Last Read</span>
+                </div>
+                <p className="text-white font-display font-semibold text-lg">{lastRead.surahName}</p>
+                <p className="text-white/70 text-sm font-body">Ayah {lastRead.ayahNumber}</p>
               </div>
-              <svg className="w-5 h-5 text-teal-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <span className="bg-white text-primary px-5 py-2.5 rounded-full font-medium text-sm font-body hover:bg-white/90 transition-colors">
+                Resume
+              </span>
             </div>
           </Link>
-        </section>
-      )}
-
-      {/* Verse of the Day */}
-      <section className="container mx-auto px-4 pb-8">
-        <VerseOfDay />
+        ) : (
+          <Link
+            href="/surahs"
+            className="block relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-primary-600 p-5 shadow-elevation-2 hover:shadow-lg transition-all"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+            <div className="relative flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-white/80 text-[18px]">menu_book</span>
+                  <span className="text-xs font-medium text-white/80 uppercase tracking-wider font-body">Start Reading</span>
+                </div>
+                <p className="text-white font-display font-semibold text-lg">Begin Your Journey</p>
+                <p className="text-white/70 text-sm font-body">Explore all 114 Surahs</p>
+              </div>
+              <span className="bg-white text-primary px-5 py-2.5 rounded-full font-medium text-sm font-body hover:bg-white/90 transition-colors">
+                Start
+              </span>
+            </div>
+          </Link>
+        )}
       </section>
 
-      {/* Quick actions */}
-      <section className="container mx-auto px-4 pb-12">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { href: '/surahs', title: 'Browse Surahs', desc: 'Navigate all chapters with details and metadata.' },
-            { href: '/search', title: 'Advanced Search', desc: 'Find verses by keywords and topics.' },
-            { href: '/bookmarks', title: 'Bookmarks', desc: 'Save and revisit your favorite Ayahs.' },
-            { href: '/mushaf/1', title: 'Mushaf View', desc: 'Page-by-page reading like a physical Quran.' },
-            { href: '/progress', title: 'Reading Progress', desc: 'Track your Quran reading journey across all surahs.' },
-            { href: '/notes', title: 'My Notes', desc: 'Personal reflections and notes on verses.' },
-          ].map((card, i) => (
+      {/* Quick Links Bento Grid */}
+      <section className="container mx-auto px-4 py-3">
+        <div className="grid grid-cols-2 gap-3">
+          {quickLinks.map((link) => (
             <Link
-              key={card.href}
-              href={card.href}
-              className="group rounded-xl bg-white dark:bg-gray-800 p-6 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
-              style={{ animationDelay: `${i * 80}ms` }}
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-3 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2 transition-all duration-200"
             >
-              <div className="flex items-start justify-between">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{card.title}</h2>
-                <span className="text-teal-600 group-hover:translate-x-1 transition-transform duration-200">→</span>
+              <div className={`${link.bg} w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0`}>
+                <span className={`material-symbols-outlined text-[20px] ${link.color}`}>{link.icon}</span>
               </div>
-              <p className="mt-2 text-gray-600 dark:text-gray-400">{card.desc}</p>
+              <span className="font-medium text-sm text-gray-900 dark:text-white font-body">{link.title}</span>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* Popular Surahs */}
-      <section className="container mx-auto px-4 pb-16">
-        <h2 className="text-base font-medium text-gray-900 dark:text-white mb-3">Popular Surahs</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {[
-            { id: 1, name: 'Al‑Fātiḥah' },
-            { id: 2, name: 'Al‑Baqarah' },
-            { id: 18, name: 'Al‑Kahf' },
-            { id: 36, name: 'Yā‑Sīn' },
-            { id: 55, name: 'Ar‑Raḥmān' },
-          ].map((s, i) => (
+      {/* Verse of the Day */}
+      <section className="container mx-auto px-4 py-3">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary text-[20px]">wb_sunny</span>
+              <span className="text-xs font-semibold text-secondary uppercase tracking-wider font-body">Verse of the Day</span>
+            </div>
+            <button className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-400" aria-label="Share verse">
+              <span className="material-symbols-outlined text-[18px]">share</span>
+            </button>
+          </div>
+          <VerseOfDay />
+        </div>
+      </section>
+
+      {/* Pinned Surahs */}
+      <section className="container mx-auto px-4 py-3 pb-8">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-headline-lg-mobile font-display font-semibold text-gray-900 dark:text-white">Pinned Surahs</h2>
+          <Link href="/surahs" className="text-sm text-primary font-medium font-body hover:text-primary-600 transition-colors">
+            View All
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
+          {pinnedSurahs.map((surah) => (
             <Link
-              key={s.id}
-              href={`/surah/${s.id}`}
-              className="rounded-lg bg-white dark:bg-gray-800 px-4 py-3 text-sm text-gray-800 dark:text-gray-100 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md hover:ring-teal-200/80 hover:-translate-y-0.5 transition-all duration-200 animate-fade-in-up"
-              style={{ animationDelay: `${i * 80}ms` }}
+              key={surah.id}
+              href={`/surah/${surah.id}`}
+              className="flex-shrink-0 w-40 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2 hover:ring-primary/30 transition-all duration-200"
             >
-              <span className="block font-medium">{s.name}</span>
-              <span className="text-gray-500 text-xs">Surah {s.id}</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="bg-primary-container dark:bg-primary-container-dark text-primary text-xs font-bold w-8 h-8 rounded-full flex items-center justify-center font-body">
+                  {surah.id}
+                </span>
+                <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[18px]">bookmark</span>
+              </div>
+              <p className="font-display font-semibold text-gray-900 dark:text-white mb-0.5">{surah.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-body">{surah.type} • {surah.ayahs} Ayahs</p>
             </Link>
           ))}
         </div>

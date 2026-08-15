@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useBookmarks } from '../hooks/useBookmarks';
 import Link from 'next/link';
 
@@ -28,15 +29,29 @@ const SURAH_NAMES = {
   111: 'Al-Masad', 112: 'Al-Ikhlas', 113: 'Al-Falaq', 114: 'An-Nas'
 };
 
+const FILTERS = ['All Bookmarks', 'Surahs', 'Ayahs'];
+
 export default function Bookmarks() {
   const { bookmarks, isLoading, removeBookmark } = useBookmarks();
+  const [activeFilter, setActiveFilter] = useState('All Bookmarks');
+  const [editing, setEditing] = useState(false);
+
+  const filtered = bookmarks.filter(b => {
+    if (activeFilter === 'All Bookmarks') return true;
+    if (activeFilter === 'Surahs') return !b.number;
+    if (activeFilter === 'Ayahs') return b.number;
+    return true;
+  });
+
+  const surahCount = bookmarks.filter(b => !b.number).length;
+  const ayahCount = bookmarks.filter(b => b.number).length;
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
+      <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse space-y-4 max-w-2xl mx-auto">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-lg h-32" />
+            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-2xl h-32" />
           ))}
         </div>
       </div>
@@ -44,45 +59,107 @@ export default function Bookmarks() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-center mb-8">Bookmarked Verses</h1>
-      
-      {bookmarks.length === 0 ? (
+    <div className="container mx-auto px-4 py-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-headline-lg font-display font-semibold text-gray-900 dark:text-white mb-1">Bookmarks</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-body">Your saved Surahs and Ayahs</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={() => setEditing(!editing)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 ring-outline-variant/50 dark:ring-outline-variant-dark/50 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-body">
+            <span className="material-symbols-outlined text-[16px]">edit</span>
+            Edit
+          </button>
+          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full ring-1 ring-error/30 text-sm text-error hover:bg-error-container/30 transition-colors font-body">
+            <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+            Clear All
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Chips */}
+      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
+        {FILTERS.map((filter) => {
+          const count = filter === 'Surahs' ? surahCount : filter === 'Ayahs' ? ayahCount : bookmarks.length;
+          return (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-4 py-2 rounded-full text-sm font-medium font-body whitespace-nowrap transition-all ${
+                activeFilter === filter
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 ring-1 ring-outline-variant/30 dark:ring-outline-variant-dark/30'
+              }`}
+            >
+              {filter} {filter !== 'All Bookmarks' && `(${count})`}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Bookmark List */}
+      {filtered.length === 0 ? (
         <div className="text-center py-12">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No bookmarks yet</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">Start reading and bookmark your favorite verses!</p>
-          <Link href="/surahs" className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+          <span className="material-symbols-outlined text-[64px] text-gray-300 dark:text-gray-600 mb-4 block">bookmark_border</span>
+          <h2 className="text-xl font-semibold font-body mb-2">No bookmarks yet</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6 font-body">Start reading and bookmark your favorite verses!</p>
+          <Link href="/surahs" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-full hover:bg-primary-600 transition-colors font-medium font-body">
+            <span className="material-symbols-outlined text-[18px]">menu_book</span>
             Browse Surahs
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {bookmarks.map((bookmark) => (
-            <div key={`${bookmark.surahNumber}-${bookmark.number}`} className="bg-white dark:bg-gray-800 p-5 sm:p-6 rounded-xl shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {bookmark.surahName || `Surah ${bookmark.surahNumber}`} : {bookmark.number}
+        <div className="space-y-3">
+          {filtered.map((bookmark) => (
+            <div key={`${bookmark.surahNumber}-${bookmark.number}`} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2 transition-all">
+              <div className="flex items-start gap-4">
+                {/* Book Icon */}
+                <div className="w-10 h-10 rounded-full bg-primary-container dark:bg-primary-container-dark flex items-center justify-center flex-shrink-0">
+                  <span className="material-symbols-outlined text-primary text-[20px]">book</span>
                 </div>
-                <button
-                  onClick={() => removeBookmark(bookmark.surahNumber, bookmark.number)}
-                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors p-1 -m-1"
-                  aria-label={`Remove bookmark for ayah ${bookmark.number}`}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-              </div>
-              <Link href={`/surah/${bookmark.surahNumber}/${bookmark.number}`}>
-                <div lang="ar" dir="rtl" className="text-right text-xl sm:text-2xl font-quran leading-loose mb-3 text-gray-800 dark:text-gray-100">
-                  {bookmark.text}
-                </div>
-                {bookmark.translationText && (
-                  <div className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                    {bookmark.translationText}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-display font-semibold text-gray-900 dark:text-white">
+                      {bookmark.surahName || SURAH_NAMES[bookmark.surahNumber] || `Surah ${bookmark.surahNumber}`}
+                    </h3>
+                    <span className="material-symbols-outlined text-primary text-[20px] fill">bookmark</span>
                   </div>
-                )}
-              </Link>
+
+                  {bookmark.number ? (
+                    <>
+                      <span className="text-xs bg-primary-container dark:bg-primary-container-dark text-primary px-2 py-0.5 rounded-full font-body font-medium">
+                        Surah {SURAH_NAMES[bookmark.surahNumber] || bookmark.surahNumber}
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 font-body mt-1">Ayah {bookmark.number}</p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-body">
+                      {bookmark.englishNameTranslation || 'The Opener'} • {bookmark.numberOfAyahs || 7} Ayahs
+                    </p>
+                  )}
+
+                  {/* Arabic Preview */}
+                  {bookmark.text && (
+                    <div lang="ar" dir="rtl" className="text-right text-lg font-quran leading-relaxed mt-2 text-gray-800 dark:text-gray-100 line-clamp-2">
+                      {bookmark.text}
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-outline-variant/30 dark:border-outline-variant-dark/30">
+                    <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 font-body">
+                      <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                      Saved {bookmark.savedAt ? new Date(bookmark.savedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
+                    </div>
+                    <Link href={`/surah/${bookmark.surahNumber}${bookmark.number ? `/${bookmark.number}` : ''}`} className="text-xs text-primary font-medium font-body hover:text-primary-600 transition-colors flex items-center gap-1">
+                      {bookmark.number ? 'Go to Ayah' : 'Read'}
+                      <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

@@ -1,92 +1,89 @@
 /**
- * Centralized API service for Quran API calls
- * Provides caching and error handling for all API requests
+ * Centralized API service for Quran API calls.
+ *
+ * Local-first strategy (see app/lib/offlineStore.js):
+ *   1. In-memory cache for instant repeat reads within a session.
+ *   2. Pre-baked static JSON that ships inside the APK (bundledPath).
+ *   3. Persistent IndexedDB cache (survives restarts / works offline).
+ *   4. Network fallback that persists the result for next time.
  */
+
+import { fetchJson, idbClear, idbDelete, idbSet } from './offlineStore';
 
 const API_BASE_URL = 'https://api.alquran.cloud/v1';
 const EXTERNAL_API_BASE = 'https://api.alquran.cloud/v1';
+const QURAN_COM_BASE = 'https://api.quran.com/api/v4';
 
-// Simple in-memory cache
-const cache = new Map();
-const CACHE_DURATION = 1000 * 60 * 30; // 30 minutes
+const CACHE_TTL = 1000 * 60 * 60 * 24; // 24h
+const NO_EXPIRE = -1;
 
-/**
- * Generic fetch with caching
- */
-async function fetchWithCache(url, options = {}) {
-  const cacheKey = url;
+// Session-level fast cache (cleared on reload, backed by IndexedDB).
+const memoryCache = new Map();
 
-  // Check cache
-  if (cache.has(cacheKey)) {
-    const { data, timestamp } = cache.get(cacheKey);
-    if (Date.now() - timestamp < CACHE_DURATION) {
-      return data;
-    }
-    cache.delete(cacheKey);
-  }
-
-  // Fetch from API
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
-  }
-
-  const data = await response.json();
-
-  // Cache the response
-  cache.set(cacheKey, { data, timestamp: Date.now() });
-
+async function apiFetch(url, options = {}) {
+  if (memoryCache.has(url)) return memoryCache.get(url);
+  const data = await fetchJson(url, { ttl: CACHE_TTL, ...options });
+  memoryCache.set(url, data);
   return data;
 }
 
 /**
- * Get list of all surahs
+ * Get list of all surahs (pre-baked in the APK).
  */
 export async function getSurahs() {
-  const url = `${API_BASE_URL}/surah`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/surah`, { bundledPath: '/data/surahs.json', ttl: NO_EXPIRE });
 }
 
 /**
- * Get a specific surah by ID with translation
+ * Get a specific surah by ID with translation.
  * @param {number} surahId - The surah number (1-114)
  * @param {string} edition - Edition identifier (default: 'en.asad')
  */
 export async function getSurah(surahId, edition = 'en.asad') {
-  const url = `${API_BASE_URL}/surah/${surahId}/${edition}`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/surah/${surahId}/${edition}`, {
+    bundledPath: `/data/surah/${surahId}/${edition}.json`,
+  });
 }
 
 /**
- * Get multiple editions of a surah
+ * Get multiple editions of a surah.
+ * Each edition is fetched (and cached) independently so offline support is
+ * granular: bundled editions work from first launch, others cache on view.
  * @param {number} surahId - The surah number (1-114)
  * @param {string[]} editions - Array of edition identifiers
  */
 export async function getSurahMultipleEditions(surahId, editions = ['ar.alafasy', 'en.asad']) {
-  const url = `${API_BASE_URL}/surah/${surahId}/editions/${editions.join(',')}`;
-  return fetchWithCache(url);
+  const results = await Promise.all(
+    editions.map((ed) =>
+      apiFetch(`${API_BASE_URL}/surah/${surahId}/${ed}`, {
+        bundledPath: `/data/surah/${surahId}/${ed}.json`,
+      })
+    )
+  );
+  return { data: results.map((r) => r.data) };
 }
 
 /**
- * Get a specific ayah
+ * Get a specific ayah.
  * @param {number} surahId - The surah number (1-114)
  * @param {number} ayahNumber - The ayah number within the surah
  * @param {string} edition - Edition identifier (default: 'en.asad')
  */
 export async function getAyah(surahId, ayahNumber, edition = 'en.asad') {
-  const url = `${API_BASE_URL}/ayah/${surahId}:${ayahNumber}/${edition}`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/ayah/${surahId}:${ayahNumber}/${edition}`);
 }
 
 /**
- * Get multiple editions of an ayah
+ * Get multiple editions of an ayah.
  * @param {number} surahId - The surah number (1-114)
  * @param {number} ayahNumber - The ayah number within the surah
  * @param {string[]} editions - Array of edition identifiers
  */
 export async function getAyahMultipleEditions(surahId, ayahNumber, editions = ['ar.alafasy', 'en.asad']) {
-  const url = `${API_BASE_URL}/ayah/${surahId}:${ayahNumber}/editions/${editions.join(',')}`;
-  return fetchWithCache(url);
+  const results = await Promise.all(
+    editions.map((ed) => apiFetch(`${API_BASE_URL}/ayah/${surahId}:${ayahNumber}/${ed}`))
+  );
+  return { data: results.map((r) => r.data) };
 }
 
 /**
@@ -99,17 +96,14 @@ export async function searchQuran(query, surah = 'all', edition = 'en') {
   if (!query || query.trim() === '') {
     return { data: { matches: [] } };
   }
-
-  const url = `${API_BASE_URL}/search/${encodeURIComponent(query)}/${surah}/${edition}`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/search/${encodeURIComponent(query)}/${surah}/${edition}`);
 }
 
 /**
  * Get available editions/translations
  */
 export async function getEditions() {
-  const url = `${API_BASE_URL}/edition`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/edition`);
 }
 
 /**
@@ -117,8 +111,7 @@ export async function getEditions() {
  * @param {string} language - Language code (e.g., 'en', 'ar', 'ur')
  */
 export async function getEditionsByLanguage(language) {
-  const url = `${API_BASE_URL}/edition/language/${language}`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/edition/language/${language}`);
 }
 
 /**
@@ -126,38 +119,37 @@ export async function getEditionsByLanguage(language) {
  * @param {string} format - Format type (e.g., 'text', 'audio')
  */
 export async function getEditionsByFormat(format) {
-  const url = `${API_BASE_URL}/edition/format/${format}`;
-  return fetchWithCache(url);
+  return apiFetch(`${API_BASE_URL}/edition/format/${format}`);
 }
 
 /**
- * Clear the entire cache
+ * Clear the entire cache (memory + persistent IndexedDB).
  */
-export function clearCache() {
-  cache.clear();
+export async function clearCache() {
+  memoryCache.clear();
+  await idbClear();
 }
 
 /**
- * Clear specific cache entry
- * @param {string} key - Cache key to clear
+ * Clear a specific cache entry.
+ * @param {string} key - Cache key (the API URL) to clear.
  */
-export function clearCacheEntry(key) {
-  cache.delete(key);
+export async function clearCacheEntry(key) {
+  memoryCache.delete(key);
+  await idbDelete(key);
 }
 
 /**
- * Get cache statistics
+ * Get cache statistics.
  */
 export function getCacheStats() {
   return {
-    size: cache.size,
-    keys: Array.from(cache.keys())
+    memorySize: memoryCache.size,
+    memoryKeys: Array.from(memoryCache.keys()),
   };
 }
 
 // ── Tafsir ──────────────────────────────────────────────────────────────
-
-const QURAN_COM_BASE = 'https://api.quran.com/api/v4';
 
 export const TAFSIR_EDITIONS = [
   { id: 'ar.jalalayn', name: 'Tafsir al-Jalalayn', language: 'ar', source: 'alquran', description: 'Classical concise tafsir by al-Mahalli and al-Suyuti' },
@@ -168,19 +160,21 @@ export const TAFSIR_EDITIONS = [
 ];
 
 export function getTafsirEdition(identifier) {
-  return TAFSIR_EDITIONS.find(e => e.id === identifier);
+  return TAFSIR_EDITIONS.find((e) => e.id === identifier);
 }
 
 /**
- * Fetch tafsir for an entire surah from AlQuran Cloud (Arabic tafsirs)
+ * Fetch tafsir for an entire surah from AlQuran Cloud (Arabic tafsirs).
  * Returns an object keyed by ayah number: { 1: tafsirHtml, 2: tafsirHtml, ... }
  */
 export async function getAlQuranCloudTafsir(surahId, editionId) {
-  const url = `${API_BASE_URL}/surah/${surahId}/${editionId}`;
-  const data = await fetchWithCache(url);
+  const data = await apiFetch(`${API_BASE_URL}/surah/${surahId}/${editionId}`, {
+    bundledPath: `/data/tafsir/${surahId}/${editionId}.json`,
+    ttl: NO_EXPIRE,
+  });
   const ayahs = data?.data?.ayahs || [];
   const result = {};
-  ayahs.forEach(a => {
+  ayahs.forEach((a) => {
     // Wrap plain text in <p> with RTL for proper rendering via dangerouslySetInnerHTML
     const escaped = a.text
       .replace(/&/g, '&amp;')
@@ -192,15 +186,14 @@ export async function getAlQuranCloudTafsir(surahId, editionId) {
 }
 
 /**
- * Fetch tafsir for an entire surah from Quran.com (English tafsirs)
+ * Fetch tafsir for an entire surah from Quran.com (English tafsirs).
  * Returns an object keyed by ayah number: { 1: tafsirHtml, 2: tafsirHtml, ... }
  */
 export async function getQuranComTafsir(surahId, tafsirId) {
-  const url = `${QURAN_COM_BASE}/tafsirs/${tafsirId}/by_chapter/${surahId}`;
-  const data = await fetchWithCache(url);
+  const data = await apiFetch(`${QURAN_COM_BASE}/tafsirs/${tafsirId}/by_chapter/${surahId}`);
   const tafsirs = data?.tafsirs || [];
   const result = {};
-  tafsirs.forEach(t => {
+  tafsirs.forEach((t) => {
     const verseNum = Number(t.verse_key.split(':')[1]);
     if (t.text && t.text.trim()) {
       result[verseNum] = t.text;
@@ -242,12 +235,13 @@ export const DEFAULT_TRANSLATION = 'en.sahih';
  * @returns {Promise<Array>} Array of word objects with text, translation, transliteration
  */
 export async function getWordByWord(surahId, ayahNumber) {
-  const url = `${QURAN_COM_BASE}/verses/by_key/${surahId}:${ayahNumber}?words=true&translation_id=131`;
-  const data = await fetchWithCache(url);
+  const data = await apiFetch(
+    `${QURAN_COM_BASE}/verses/by_key/${surahId}:${ayahNumber}?words=true&translation_id=131`
+  );
   const words = data?.verse?.words || [];
   return words
-    .filter(w => w.char_type_name === 'word')
-    .map(w => ({
+    .filter((w) => w.char_type_name === 'word')
+    .map((w) => ({
       text: w.text,
       translation: w.translation?.text?.trim() || '',
       transliteration: w.transliteration?.text?.trim() || '',
@@ -262,11 +256,12 @@ export async function getWordByWord(surahId, ayahNumber) {
  * @returns {Promise<Object>} Map of ayahNumber -> tajweed text with markup
  */
 export async function getSurahTajweed(surahId) {
-  const url = `${API_BASE_URL}/surah/${surahId}/quran-tajweed`;
-  const data = await fetchWithCache(url);
+  const data = await apiFetch(`${API_BASE_URL}/surah/${surahId}/quran-tajweed`, {
+    bundledPath: `/data/surah/${surahId}/quran-tajweed.json`,
+  });
   const ayahs = data?.data?.ayahs || [];
   const result = {};
-  ayahs.forEach(a => {
+  ayahs.forEach((a) => {
     result[a.numberInSurah] = a.text;
   });
   return result;
@@ -275,13 +270,28 @@ export async function getSurahTajweed(surahId) {
 // ── Mushaf Page ─────────────────────────────────────────────────────────
 
 /**
- * Get a specific Mushaf page (1-604) with Arabic text + translation
+ * Get a specific Mushaf page (1-604) with Arabic text + translation.
+ * Offline-first: a pre-baked merged copy ships in the APK at
+ * /data/page/{n}.json; otherwise the two endpoints are fetched, merged,
+ * and cached in IndexedDB for subsequent offline use.
  * @param {number} pageNumber - The page number (1-604)
  */
 export async function getPage(pageNumber) {
   const arabicUrl = `${EXTERNAL_API_BASE}/page/${pageNumber}/ar.alafasy`;
   const translationUrl = `${EXTERNAL_API_BASE}/page/${pageNumber}/en.sahih`;
+  const bundledPath = `/data/page/${pageNumber}.json`;
 
+  // 1. Pre-baked merged page (works fully offline from first launch).
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(bundledPath);
+      if (res.ok) return await res.json();
+    } catch {
+      /* fall through to network */
+    }
+  }
+
+  // 2. Network merge + cache.
   const [arabicRes, translationRes] = await Promise.all([
     fetch(arabicUrl),
     fetch(translationUrl),
@@ -301,11 +311,16 @@ export async function getPage(pageNumber) {
     translationText: translationAyahs[index]?.text || '',
   }));
 
-  return {
+  const result = {
     data: {
       ...arabicData.data,
       ayahs: mergedAyahs,
       surahs: arabicData.data.surahs,
     },
   };
+
+  if (typeof window !== 'undefined') {
+    idbSet(arabicUrl, { data: result, timestamp: Date.now() });
+  }
+  return result;
 }

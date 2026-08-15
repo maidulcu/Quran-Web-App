@@ -9,6 +9,7 @@
     "cap:sync": "npx cap sync",
     "cap:open": "npx cap open android",
     "cap:build": "npx cap build android",
+    "build:offline-data": "node scripts/build-offline-data.mjs",
     "lint": "next lint"
   },
   "dependencies": {

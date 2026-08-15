@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Amiri:wght@400;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,36 +17,93 @@
 }
 
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Material Symbols base styles */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 @layer base {
   a:focus-visible,
   button:focus-visible {
-    @apply outline-none ring-2 ring-teal-500 ring-offset-2;
+    @apply outline-none ring-2 ring-primary ring-offset-2;
   }
 
-  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
-  .dark ::-webkit-scrollbar-thumb { background: #475569; }
+  ::-webkit-scrollbar-thumb { background: #c4c7cc; border-radius: 4px; }
+  .dark ::-webkit-scrollbar-thumb { background: #374151; }
 }
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@layer components {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .dark .glass-panel {
+    background: rgba(17, 24, 39, 0.85);
+    border: 1px solid rgba(55, 65, 81, 0.3);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bg-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z' fill='%23004532' fill-opacity='0.03'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  .ornate-border {
+    border: 4px solid #004532;
+    padding: 8px;
+    position: relative;
+  }
+  .ornate-border::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid rgba(0, 69, 50, 0.2);
+    pointer-events: none;
+  }
+
+  .fill {
+    font-variation-settings: 'FILL' 1;
+  }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.5s ease-out both;
-}
-
-.tajweed-ham { color: #7B2D8B; }
-.tajweed-lam { color: #2E7D32; }
-.tajweed-ghunnah { color: #1565C0; }
-.tajweed-madd { color: #C62828; }
+/* Tajweed colors - Design System */
+.tajweed-madd { color: #d946ef; }
+.tajweed-ghunnah { color: #f59e0b; }
+.tajweed-idgham { color: #10b981; }
+.tajweed-qalqalah { color: #3b82f6; }
+.tajweed-ikhfa { color: #10b981; }
+.tajweed-ham { color: #d946ef; }
+.tajweed-lam { color: #10b981; }
 .tajweed-pause { color: #00695C; }
 
+/* Font size levels */
 .font-size-s .quran-text { font-size: 1.5rem; line-height: 2.5; }
 .font-size-m .quran-text { font-size: 1.75rem; line-height: 2.75; }
 .font-size-l .quran-text { font-size: 2rem; line-height: 3; }
@@ -57,9 +116,35 @@ body {
 .font-size-xl .quran-header { font-size: 2.75rem; }
 .font-size-xxl .quran-header { font-size: 3rem; }
 
+/* Mushaf themes */
+.mushaf-cream { background-color: #FDFBF7; color: #1a1a1a; }
+.mushaf-white { background-color: #FFFFFF; color: #1a1a1a; }
+.mushaf-dark { background-color: #121212; color: #e5e5e5; }
+.mushaf-sepia { background-color: #F4ECD8; color: #5c4a32; }
+
+/* Interactive patterns */
+@layer utilities {
+  .tap-scale {
+    transition: transform 0.15s ease;
+  }
+  .tap-scale:active {
+    transform: scale(0.95);
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
 @keyframes pulseSubtle {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.5); }
-  50% { box-shadow: 0 0 0 8px rgba(13, 148, 136, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 69, 50, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 69, 50, 0); }
 }
 
 .animate-pulse-subtle {

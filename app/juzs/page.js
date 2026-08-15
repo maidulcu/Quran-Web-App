@@ -1,37 +1,38 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 
 const JUZ_DATA = [
-  { juz: 1, startSurah: 1, startAyah: 1, endSurah: 2, endAyah: 141, name: 'Alif Lam Mim' },
-  { juz: 2, startSurah: 2, startAyah: 142, endSurah: 2, endAyah: 252, name: 'Saya\'kallassu' },
-  { juz: 3, startSurah: 2, startAyah: 253, endSurah: 3, endAyah: 92, name: 'Tilka al-Rusul' },
-  { juz: 4, startSurah: 3, startAyah: 93, endSurah: 4, endAyah: 23, name: 'Lan Tanaalu' },
-  { juz: 5, startSurah: 4, startAyah: 24, endSurah: 4, endAyah: 147, name: 'Wal Mohsanat' },
-  { juz: 6, startSurah: 4, startAyah: 148, endSurah: 5, endAyah: 81, name: 'La Yuhibbullah' },
-  { juz: 7, startSurah: 5, startAyah: 82, endSurah: 6, endAyah: 110, name: 'Wa Idh Samiu' },
-  { juz: 8, startSurah: 6, startAyah: 111, endSurah: 7, endAyah: 87, name: 'Wa Law Annana' },
-  { juz: 9, startSurah: 7, startAyah: 88, endSurah: 8, endAyah: 40, name: 'Qala Al-Malau' },
-  { juz: 10, startSurah: 8, startAyah: 41, endSurah: 9, endAyah: 92, name: 'Wa\'lamu' },
-  { juz: 11, startSurah: 9, startAyah: 93, endSurah: 11, endAyah: 5, name: "Ya'tadhirusuna" },
-  { juz: 12, startSurah: 11, startAyah: 6, endSurah: 12, endAyah: 52, name: 'Wa Ma Min Dabbah' },
-  { juz: 13, startSurah: 12, startAyah: 53, endSurah: 15, endAyah: 1, name: 'Wa Ma Ubbarriu' },
-  { juz: 14, startSurah: 15, startAyah: 2, endSurah: 16, endAyah: 128, name: 'Subhanallazi' },
-  { juz: 15, startSurah: 17, startAyah: 1, endSurah: 18, endAyah: 74, name: "Subhana'lladhi" },
-  { juz: 16, startSurah: 18, startAyah: 75, endSurah: 20, endAyah: 135, name: 'Qala Alam' },
-  { juz: 17, startSurah: 21, startAyah: 1, endSurah: 22, endAyah: 78, name: 'Iqtaraba' },
-  { juz: 18, startSurah: 23, startAyah: 1, endSurah: 25, endAyah: 20, name: 'Qadda Allahu' },
-  { juz: 19, startSurah: 25, startAyah: 21, endSurah: 27, endAyah: 55, name: 'Wa Qala Alladhina' },
-  { juz: 20, startSurah: 27, startAyah: 56, endSurah: 29, endAyah: 45, name: "Wa'idh Qala" },
-  { juz: 21, startSurah: 29, startAyah: 46, endSurah: 33, endAyah: 30, name: 'Utlu Ma Uhiya' },
-  { juz: 22, startSurah: 33, startAyah: 31, endSurah: 36, endAyah: 27, name: 'Wa Man Yaqnut' },
-  { juz: 23, startSurah: 36, startAyah: 28, endSurah: 39, endAyah: 31, name: "Wa Ma 'Alayna" },
-  { juz: 24, startSurah: 39, startAyah: 32, endSurah: 41, endAyah: 46, name: 'Fa Man Azlamu' },
-  { juz: 25, startSurah: 41, startAyah: 47, endSurah: 45, endAyah: 37, name: 'Ila Alladhi' },
-  { juz: 26, startSurah: 46, startAyah: 1, endSurah: 51, endAyah: 30, name: 'Ha Mim' },
-  { juz: 27, startSurah: 51, startAyah: 31, endSurah: 57, endAyah: 29, name: "Qala Fama Khatbukum" },
-  { juz: 28, startSurah: 58, startAyah: 1, endSurah: 67, endAyah: 30, name: "Qadd Sami'allahu" },
-  { juz: 29, startSurah: 67, startAyah: 31, endSurah: 78, endAyah: 1, name: "Tabaraka'lladhi" },
-  { juz: 30, startSurah: 78, startAyah: 1, endSurah: 114, endAyah: 6, name: "Amma Yatasa'alun" },
+  { juz: 1, startSurah: 1, startAyah: 1, endSurah: 2, endAyah: 141, name: 'Alif Lam Mim', progress: 100 },
+  { juz: 2, startSurah: 2, startAyah: 142, endSurah: 2, endAyah: 252, name: 'Saya\'kallassu', progress: 45 },
+  { juz: 3, startSurah: 2, startAyah: 253, endSurah: 3, endAyah: 92, name: 'Tilka al-Rusul', progress: 0 },
+  { juz: 4, startSurah: 3, startAyah: 93, endSurah: 4, endAyah: 23, name: 'Lan Tanaalu', progress: 0 },
+  { juz: 5, startSurah: 4, startAyah: 24, endSurah: 4, endAyah: 147, name: 'Wal Mohsanat', progress: 0 },
+  { juz: 6, startSurah: 4, startAyah: 148, endSurah: 5, endAyah: 81, name: 'La Yuhibbullah', progress: 0 },
+  { juz: 7, startSurah: 5, startAyah: 82, endSurah: 6, endAyah: 110, name: 'Wa Idh Samiu', progress: 0 },
+  { juz: 8, startSurah: 6, startAyah: 111, endSurah: 7, endAyah: 87, name: 'Wa Law Annana', progress: 0 },
+  { juz: 9, startSurah: 7, startAyah: 88, endSurah: 8, endAyah: 40, name: 'Qala Al-Malau', progress: 0 },
+  { juz: 10, startSurah: 8, startAyah: 41, endSurah: 9, endAyah: 92, name: 'Wa\'lamu', progress: 0 },
+  { juz: 11, startSurah: 9, startAyah: 93, endSurah: 11, endAyah: 5, name: "Ya'tadhirusuna", progress: 0 },
+  { juz: 12, startSurah: 11, startAyah: 6, endSurah: 12, endAyah: 52, name: 'Wa Ma Min Dabbah', progress: 0 },
+  { juz: 13, startSurah: 12, startAyah: 53, endSurah: 15, endAyah: 1, name: 'Wa Ma Ubbarriu', progress: 0 },
+  { juz: 14, startSurah: 15, startAyah: 2, endSurah: 16, endAyah: 128, name: 'Subhanallazi', progress: 0 },
+  { juz: 15, startSurah: 17, startAyah: 1, endSurah: 18, endAyah: 74, name: "Subhana'lladhi", progress: 0 },
+  { juz: 16, startSurah: 18, startAyah: 75, endSurah: 20, endAyah: 135, name: 'Qala Alam', progress: 0 },
+  { juz: 17, startSurah: 21, startAyah: 1, endSurah: 22, endAyah: 78, name: 'Iqtaraba', progress: 0 },
+  { juz: 18, startSurah: 23, startAyah: 1, endSurah: 25, endAyah: 20, name: 'Qadda Allahu', progress: 0 },
+  { juz: 19, startSurah: 25, startAyah: 21, endSurah: 27, endAyah: 55, name: 'Wa Qala Alladhina', progress: 0 },
+  { juz: 20, startSurah: 27, startAyah: 56, endSurah: 29, endAyah: 45, name: "Wa'idh Qala", progress: 0 },
+  { juz: 21, startSurah: 29, startAyah: 46, endSurah: 33, endAyah: 30, name: 'Utlu Ma Uhiya', progress: 0 },
+  { juz: 22, startSurah: 33, startAyah: 31, endSurah: 36, endAyah: 27, name: 'Wa Man Yaqnut', progress: 0 },
+  { juz: 23, startSurah: 36, startAyah: 28, endSurah: 39, endAyah: 31, name: "Wa Ma 'Alayna", progress: 0 },
+  { juz: 24, startSurah: 39, startAyah: 32, endSurah: 41, endAyah: 46, name: 'Fa Man Azlamu', progress: 0 },
+  { juz: 25, startSurah: 41, startAyah: 47, endSurah: 45, endAyah: 37, name: 'Ila Alladhi', progress: 0 },
+  { juz: 26, startSurah: 46, startAyah: 1, endSurah: 51, endAyah: 30, name: 'Ha Mim', progress: 0 },
+  { juz: 27, startSurah: 51, startAyah: 31, endSurah: 57, endAyah: 29, name: "Qala Fama Khatbukum", progress: 0 },
+  { juz: 28, startSurah: 58, startAyah: 1, endSurah: 67, endAyah: 30, name: "Qadd Sami'allahu", progress: 0 },
+  { juz: 29, startSurah: 67, startAyah: 31, endSurah: 78, endAyah: 1, name: "Tabaraka'lladhi", progress: 0 },
+  { juz: 30, startSurah: 78, startAyah: 1, endSurah: 114, endAyah: 6, name: "Amma Yatasa'alun", progress: 0 },
 ];
 
 const SURAH_NAMES = {
@@ -61,34 +62,65 @@ const SURAH_NAMES = {
 };
 
 export default function JuzList() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6" aria-label="Breadcrumb">
-        <Link href="/" className="hover:text-teal-600 transition-colors">Home</Link>
-        <span>/</span>
-        <span className="text-gray-900 dark:text-white">Juz</span>
-      </nav>
+  const [search, setSearch] = useState('');
 
-      <h1 className="text-3xl font-bold text-center mb-2">Juz (Para)</h1>
-      <p className="text-center text-gray-500 dark:text-gray-400 mb-8">The Quran divided into 30 parts for daily reading</p>
-      
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {JUZ_DATA.map((juz) => (
+  const filtered = JUZ_DATA.filter(j => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      j.name.toLowerCase().includes(q) ||
+      String(j.juz).includes(q) ||
+      SURAH_NAMES[j.startSurah]?.toLowerCase().includes(q) ||
+      SURAH_NAMES[j.endSurah]?.toLowerCase().includes(q)
+    );
+  });
+
+  return (
+    <div className="container mx-auto px-4 py-6">
+      {/* Search Bar */}
+      <div className="flex items-center bg-white dark:bg-gray-800 rounded-full ring-1 ring-outline-variant/50 dark:ring-outline-variant-dark/50 px-4 py-2.5 shadow-sm mb-6">
+        <span className="material-symbols-outlined text-gray-400 text-[20px] mr-2">search</span>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 bg-transparent outline-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 font-body"
+          placeholder="Search for a Juz..."
+        />
+      </div>
+
+      {/* Juz List */}
+      <div className="space-y-3">
+        {filtered.map((juz) => (
           <Link
             key={juz.juz}
             href={`/surah/${juz.startSurah}/${juz.startAyah}`}
-            className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-700/60 hover:shadow-md transition-all"
+            className="group block relative overflow-hidden bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm ring-1 ring-outline-variant/40 dark:ring-outline-variant-dark/40 hover:shadow-elevation-2 hover:ring-primary/30 transition-all duration-200"
           >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <span className="text-2xl font-bold text-teal-600">{juz.juz}</span>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">{juz.name}</p>
-              </div>
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            {/* Arabic text overlay */}
+            <div className="absolute top-4 right-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+              <span lang="ar" className="text-4xl font-arabic text-primary font-bold">الجزء</span>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {SURAH_NAMES[juz.startSurah]} {juz.startAyah} → {SURAH_NAMES[juz.endSurah]} {juz.endAyah}
-            </p>
+
+            <div className="relative">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <span className="text-headline-lg font-display font-bold text-primary">{juz.juz}</span>
+                  <p className="text-sm font-medium font-body text-gray-900 dark:text-white mt-0.5">{juz.name}</p>
+                </div>
+                <span className="material-symbols-outlined text-gray-300 dark:text-gray-600 text-[20px]">chevron_right</span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-body mb-3">
+                {SURAH_NAMES[juz.startSurah]} {juz.startAyah} → {SURAH_NAMES[juz.endSurah]} {juz.endAyah}
+              </p>
+
+              {/* Progress Bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${juz.progress}%` }} />
+                </div>
+                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 font-body min-w-[32px] text-right">{juz.progress}%</span>
+              </div>
+            </div>
           </Link>
         ))}
       </div>

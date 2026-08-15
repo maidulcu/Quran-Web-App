@@ -1,5 +1,6 @@
 'use client';
 import { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
+import { getLocalAudioUrl, cacheAudio } from '../lib/audioCache';
 
 const AudioPlayerContext = createContext();
 
@@ -17,19 +18,25 @@ export function AudioPlayerProvider({ children }) {
   const audioRef = useRef(null);
   const playAudioRef = useRef(null);
 
-  const playAudio = useCallback((ayah) => {
+  const playAudio = useCallback(async (ayah) => {
     const audio = audioRef.current;
     if (!audio || !ayah?.audio) return;
 
     setCurrentAyah(ayah);
     repeatCountRef.current = 0;
-    audio.src = ayah.audio;
+
+    // Prefer a locally cached copy so playback works offline.
+    const local = await getLocalAudioUrl(ayah.audio);
+    audio.src = local || ayah.audio;
     audio.playbackRate = playbackRate;
     audio.play().then(() => {
       setIsPlaying(true);
     }).catch(() => {
       setIsPlaying(false);
     });
+
+    // If we had to stream it, cache it in the background for next time.
+    if (!local) cacheAudio(ayah.audio);
   }, [playbackRate]);
 
   useEffect(() => {
